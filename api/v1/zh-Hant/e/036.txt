@@ -1,0 +1,24 @@
+// Motion Prompt #036 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#036
+//
+// 荷蘭角 / Dutch angle
+// 包: camera (運鏡與轉場) · element 12 · 分類: 拍攝手法與時間效果
+// 會發生什麼: 原本水平的攝影機繞著鏡頭光軸滾轉，讓地平線保持傾斜並停住。
+// 動態規格:
+//   - 攝影機：位置固定（高度 1.5 m）；只改滾轉角（roll），0 → 0.36 rad（約 21°）；整個畫面以畫面中心為軸旋轉
+//   - 時間：0.6 秒到 2.2 秒（1.6 秒），三次緩入緩出（相當於 cubic-bezier(0.65,0,0.35,1)）
+//   - 被攝體：人物靜止站在前方 7 m 處；地平線、建築與人物一起傾斜相同角度
+//   - 停住：2.2 秒到 4.2 秒維持傾斜（讓觀眾看清傾斜構圖本身的時間）
+//   - 復位：最後 0.5 秒交叉淡化回水平的起始狀態（一輪 4.7 秒）
+//   - 右上角顯示角度（∠ 0° → ∠ 21°）
+// 使用時機: 用畫面表現不安、緊張或不對勁的感覺時。
+// 標籤: dutch angle, dutch tilt, canted angle, oblique, roll, tension, tilted horizon
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#036
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 12
+// 12 ダッチアングル
+CELLS[11] = shot(camCell((k, w, h, p) => world(k, w, h, cam({ roll: lerp(0, 0.36, p) }), { person: { z: 7 } }), p => `∠ ${Math.round(lerp(0, 0.36, p) * 57.3)}°`, 0.6, 2.2));

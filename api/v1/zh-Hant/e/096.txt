@@ -1,0 +1,46 @@
+// Motion Prompt #096 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#096
+//
+// 漂浮動畫 / Floating animation
+// 包: lp (Landing Page 與網站效果) · element 24 · 分類: 載入、轉場與持續動態
+// 會發生什麼: 標題旁邊，手機、愛心徽章與評分標籤各自錯開節奏、緩緩上下漂浮，手機下方的陰影也跟著放大縮小。
+// 動態規格:
+//   - 手機（92 × 132）：y = −8·sin(2πt/2.4)，每 2.4 秒上下來回一次；正弦波在兩端會變慢。
+//   - 愛心徽章（半徑 20）：y = −6·sin(2πt/1.6 + 1.2)。評分標籤（76 × 30）：y = −6·sin(2πt/2.4 + 2.4)。
+//   - 手機下方的陰影（54 × 6 的橢圓）：大小與不透明度乘以 (1 + y/40)，因此手機上升時陰影變小變淡。
+//   - 兩個週期（2.4 秒與 1.6 秒）都能整除 4.8 秒，所以循環沒有接縫。
+// 使用時機: 想替商品圖、App 示意圖或裝飾圖示加上安靜的動態時。
+// 標籤: floating, float, bob, hover-animation, keyframes, translatey, decoration, loop
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#096
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 24
+// 24 ふわふわアニメーション（画面の飾りが、ゆっくり上下に浮き沈みし続ける）
+CELLS[23] = (k, w, h, u) => {
+  frame(k);
+  const bob = (T, A, ph) => -A * Math.sin(2 * Math.PI * u / T + ph);   // 上下（easeInOut に近いサイン波）
+  const y1 = bob(2.4, 8, 0), y2 = bob(1.6, 6, 1.2), y3 = bob(2.4, 6, 2.4);
+  view(k, () => {
+    k.fillStyle = C.soft; k.fillRect(0, 0, VW, VH);
+    txt(k, 'アプリで、', 34, 62, `800 24px ${JP}`, C.ink); txt(k, 'もっと身軽に。', 34, 94, `800 24px ${JP}`, C.ink);
+    bars(k, 34, 108, 170, 2); btn(k, 34, 134, 112, 24, 'ダウンロード');
+    // 影（上がるほど小さく薄く）
+    const sh = 1 + y1 / 40;
+    k.fillStyle = `rgba(28,35,51,${0.16 * sh})`; k.beginPath(); k.ellipse(352, 160, 54 * sh, 6 * sh, 0, 0, 7); k.fill();
+    // スマホ
+    k.save(); k.translate(0, y1);
+    k.fillStyle = C.ink; rr(k, 306, 18, 92, 132, 16); k.fill(); k.fillStyle = '#fff'; rr(k, 312, 24, 80, 120, 11); k.fill();
+    pic(k, 318, 32, 68, 52, 0, 6); bars(k, 318, 92, 68, 3, C.faint, 5, 10);
+    k.restore();
+    // 飾り（ハートの丸と星のチップ）
+    k.save(); k.translate(0, y2); k.shadowColor = 'rgba(28,35,51,.18)'; k.shadowBlur = 10; k.shadowOffsetY = 4;
+    k.fillStyle = C.acc; k.beginPath(); k.arc(268, 54, 20, 0, 7); k.fill(); k.shadowColor = 'transparent';
+    k.fillStyle = '#fff'; k.beginPath(); k.moveTo(268, 62); k.bezierCurveTo(254, 53, 260, 41, 268, 48); k.bezierCurveTo(276, 41, 282, 53, 268, 62); k.fill(); k.restore();
+    k.save(); k.translate(0, y3); k.shadowColor = 'rgba(28,35,51,.16)'; k.shadowBlur = 10; k.shadowOffsetY = 4;
+    k.fillStyle = '#fff'; rr(k, 410, 92, 76, 30, 15); k.fill(); k.shadowColor = 'transparent';
+    txt(k, '★ 4.8', 448, 108, `800 13px ${EN}`, C.acc, 'center', 'middle'); k.restore();
+  });
+};

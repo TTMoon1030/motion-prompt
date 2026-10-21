@@ -1,0 +1,26 @@
+// Motion Prompt #116 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#116
+//
+// 雙色調 / Duotone
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 20 · 分類: 調色與風格
+// 會發生什麼: 同一幅風景的顏色被換成只在兩色之間變化：暗部為靛藍，亮部為粉紅。
+// 動態規格:
+//   - 場景 3：左側為胸像（頭部中心 x 140, y 82，半徑 28 px），右側為山丘、房子、樹與太陽（x 432, y 54，半徑 15 px）。
+//   - 兩色：暗端 #1F2A5C，亮端 #FF9FB2
+//   - 轉換：由各顏色的亮度 L 求出 t = ((L − 70) / 180)^2.4，再以 t 混合兩色（拉開亮色調之間的差距）
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想用品牌色統一海報、音樂封面或社群圖片時。
+// 標籤: duotone, two-tone, gradient map, color overlay, poster, graphic
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#116
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 20
+// デュオトーン: 暗い所を藍、明るい所をピンクの2色だけに置き換える
+CELLS[19] = cell((k, u) => {
+  const a = env(u);
+  const DUO = mapPal(BASE, c => mixc('#1F2A5C', '#FF9FB2', Math.pow(clamp((lum(c) - 70) / (250 - 70)), 2.4)));
+  stageLand(k, pal(BASE, DUO, a));
+});

@@ -1,0 +1,37 @@
+// Motion Prompt #002 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#002
+//
+// Stagger
+// 包: motion (Motion Graphics 動態手法) · element 02 · 分類: 登場與文字動態
+// 會發生什麼: 圖表的長條從左邊開始，依序錯開一點時間往上長出來。
+// 動態規格:
+//   - 每 2.35 秒播放 1 次。7 根長條（寬 44、間距 20、高度 52, 84, 68, 112, 92, 136, 158），顏色依藍色、珊瑚色、黃色、薄荷綠輪流
+//   - 第 i 根（從 0 起算）在 0.15 + 0.12·i 秒開始，以 backOut（s = 2.6）在 0.5 秒內從高度 0 長到全高；以底邊為基準，衝過頭後回穩
+//   - 白點（半徑 6.5，位於長條頂端上方 16 px）：比所屬長條晚 0.34 秒，以彈簧曲線 1 − e^(−7t)·cos(16t) 出現
+//   - 退場：長條從 1.78 + 0.045·i 秒起，以 easeIn（3 次方）在 0.26 秒內縮回；白點先消失，從 1.70 + 0.045·i 秒起花 0.2 秒
+// 使用時機: 想讓清單、圖表長條、卡片等多個元素依序出現，引導視線移動時使用。
+// 標籤: stagger, sequence, delay, cascade, bar-chart, list, entrance
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#002
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 02
+// 02 スタガー（グラフの棒が、少しずつ時間をずらして順に立ち上がる）
+CELLS[1] = (k, w, h, u) => {
+  stage(k);
+  const N = 7, BW = 44, G = 20, x0 = (w - (N * BW + (N - 1) * G)) / 2, base = h - 30;
+  const HS = [52, 84, 68, 112, 92, 136, 158];
+  k.fillStyle = C.navy3; rr(k, x0 - 18, base, N * BW + (N - 1) * G + 36, 5, 2.5); k.fill();
+  const lu = mod(u, CYC / 2);
+  for (let i = 0; i < N; i++) {
+    const t0 = 0.15 + i * 0.12, g = backOut(P(lu, t0, t0 + 0.5), 2.6) * (1 - eIn(P(lu, 1.78 + i * 0.045, 2.04 + i * 0.045)));
+    if (g <= 0.001) continue;
+    const hh = HS[i] * g, x = x0 + i * (BW + G);
+    k.fillStyle = PAL[i % 4]; rr(k, x, base - hh, BW, hh, [12, 12, 3, 3]); k.fill();
+    // 棒の上の点（さらに遅れて出る）
+    const d = spring(lu - t0 - 0.34, 16, 7) * (1 - eIn(P(lu, 1.7 + i * 0.045, 1.9 + i * 0.045)));
+    if (d > 0.01) { k.fillStyle = '#fff'; k.beginPath(); k.arc(x + BW / 2, base - hh - 16, 6.5 * d, 0, 7); k.fill(); }
+  }
+};

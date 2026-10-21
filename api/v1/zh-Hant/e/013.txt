@@ -1,0 +1,34 @@
+// Motion Prompt #013 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#013
+//
+// 液態動畫 / Liquid motion
+// 包: motion (Motion Graphics 動態手法) · element 13 · 分類: 動態質感
+// 會發生什麼: 一團液滴伸長、斷成幾滴，再黏滑地融合回一團。
+// 動態規格:
+//   - 領頭圓形（半徑 44）：在 0.35–1.45 秒以 cubic-bezier(.7, 0, .2, 1) 向右移動 300 px，移動中沿 sin 曲線的波峰升高 34 px；在 2.7–3.8 秒以相同方式回來
+//   - 7 個圓形沿同一路徑跟隨，每個晚 0.065 秒，半徑由 44 漸縮至 15，並上下晃動 ±6 px
+//   - 即使靜止時，周圍也有 3 個小圓（半徑 15、13、11）在距離 34 到 64 px 之間進出，每個循環 2 次
+//   - 融合質感：將圓形畫成白色 → 模糊 9 px → 以門檻值切割透明度（只在 112 到 144 之間柔和過渡）→ 在留下的形狀上填色
+//   - 填色為斜向漸層：薄荷綠 → 藍色 → 紫色（#7C5CFF），領頭圓形上有白色橢圓高光
+// 使用時機: 想在 Logo、背景或銜接動作中營造有機、柔軟的感覺時使用。
+// 標籤: liquid, blob, goo, gooey, metaball, fluid, organic, drip
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#013
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 13
+// 13 リキッドモーション（しずくが伸びて、ちぎれて、ぬるっと1つにまとまる）
+const LQ = bez(.7, 0, .2, 1);
+const lqPos = uu => { const u = mod(uu, CYC); let p; if (u < 0.35) p = 0; else if (u < 1.45) p = LQ(P(u, 0.35, 1.45)); else if (u < 2.7) p = 1; else if (u < 3.8) p = 1 - LQ(P(u, 2.7, 3.8)); else p = 0; const mvp = (u >= 0.35 && u < 1.45) ? P(u, 0.35, 1.45) : (u >= 2.7 && u < 3.8) ? P(u, 2.7, 3.8) : 0; return [lerp(120, 420, p), 104 - 34 * Math.sin(Math.PI * mvp)]; };
+CELLS[12] = (k, w, h, u) => {
+  stage(k);
+  const blobs = [];
+  for (let i = 0; i < 8; i++) { const [x, y] = lqPos(u - i * 0.065); blobs.push([x, y + (i ? 6 * Math.sin(u * 2.67 + i) : 0), lerp(44, 15, i / 7)]); }
+  // 止まっている間、まわりで小さなしずくが出入りする
+  for (let j = 0; j < 3; j++) { const [x, y] = lqPos(u - 0.1), a = j * 2.2 + 0.6, d = 34 + 30 * (0.5 - 0.5 * Math.cos(u / CYC * Math.PI * 4 + j * 2.1)); blobs.push([x + Math.cos(a) * d, y + Math.sin(a) * d * 0.8, 15 - j * 2]); }
+  const L = goo(g => { for (const b of blobs) { g.beginPath(); g.arc(b[0], b[1], b[2], 0, 7); g.fill(); } }, 9, g => { const gr = g.createLinearGradient(60, 30, 480, 180); gr.addColorStop(0, C.mint); gr.addColorStop(0.55, C.blue); gr.addColorStop(1, '#7C5CFF'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  k.drawImage(L, 0, 0);
+  const [hx, hy] = lqPos(u); k.fillStyle = 'rgba(255,255,255,.75)'; k.beginPath(); k.ellipse(hx - 14, hy - 17, 10, 6, -0.6, 0, 7); k.fill();
+};

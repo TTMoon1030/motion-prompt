@@ -1,0 +1,26 @@
+// Motion Prompt #115 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#115
+//
+// 黑白 / Black and white
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 19 · 分類: 調色與風格
+// 會發生什麼: 同一幅風景的色彩褪去，太陽與人物身上的光都變成灰色，只靠明暗差異辨識形狀。
+// 動態規格:
+//   - 場景 3：左側為胸像（頭部中心 x 140, y 82，半徑 28 px），右側為山丘、房子、樹與太陽（x 432, y 54，半徑 15 px）。
+//   - 轉換：每個顏色換成其亮度（0.2126R + 0.7152G + 0.0722B）對應的灰色，再以 140 為中心把對比 ×1.25
+//   - 例：人物 #4D5A75 → 約 #4D4D4D，太陽 #F5A524 → 約 #B5B5B5
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想帶出年代感與經典感，或比起顏色更想呈現形狀、光線與表情時。
+// 標籤: black and white, monochrome, b&w, grayscale, desaturated, classic
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#115
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 19
+// モノクロ: 色を抜き、明るさだけで見せる（コントラストを少し強める）
+CELLS[18] = cell((k, u) => {
+  const a = env(u);
+  const GRAY = mapPal(BASE, c => { const g = clamp((lum(c) - 140) * 1.25 + 140, 0, 255); return toHex([g, g, g]); });
+  stageLand(k, pal(BASE, GRAY, a));
+});

@@ -1,0 +1,38 @@
+// Motion Prompt #035 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#035
+//
+// FPV 穿越機 / FPV drone shot
+// 包: camera (運鏡與轉場) · element 11 · 分類: 拍攝手法與時間效果
+// 會發生什麼: 以第一人稱視角在兩排樹之間低空高速飛行，機身左右傾斜蛇行。
+// 動態規格:
+//   - 攝影機：以等速 14 m/s（顯示為 50km/h）往前飛，無緩動；俯仰角固定為 -0.05 rad
+//   - 蛇行（T = 2π×u/4.7，每 4.7 秒左右來回 2 次）：橫向位置 0.6·sin(2T-0.4) m，高度 1.4 + 0.5·sin(2T) m
+//   - 傾斜：滾轉 0.22·sin(2T+0.6) rad（約 ±12.6°），偏航 0.05·sin(2T) rad（約 ±2.9°）
+//   - 無被攝體。高 4.2 m 的樹立在左右兩側 3.6 m 處，每隔 8 m 一棵，左右兩排錯開 4 m，一棵接一棵朝攝影機衝來
+//   - 速度線：從中心放射出 10 條，長約 32–76 px（越靠兩側越長），半透明灰色，往外流動並循環
+//   - 沒有停住，也沒有交叉淡化復位（每 4.7 秒重新開始時，樹列的相位會錯開）
+// 使用時機: 要營造速度感與沉浸感，或以一個連續鏡頭飛越整個場地時。
+// 標籤: fpv, drone, fly through, first person, banking, speed, aerial
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#035
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 11
+// 11 FPV
+CELLS[10] = shot((k, w, h, u) => {
+  const sp = 14, z = u * sp, T = u * 2 * Math.PI / CYC;
+  const c = cam({ z, y: 1.4 + 0.5 * Math.sin(T * 2), roll: 0.22 * Math.sin(T * 2 + 0.6), yaw: 0.05 * Math.sin(T * 2), x: 0.6 * Math.sin(T * 2 - 0.4), pitch: -0.05 });
+  const ex = [];
+  const L = 8, base = Math.floor(z / L) * L;
+  for (let i = 0; i < 12; i++) { const zz = base + i * L; ex.push([-3.6, 0, zz, (kk, s) => tree(kk, s, 4.2)]); ex.push([3.6, 0, zz + L / 2, (kk, s) => tree(kk, s, 4.2, C.blueXL)]); }
+  world(k, w, h, c, {
+    buildings: false, trees: false, extra: ex, gridX: 20,
+    after: (kk) => {   // スピード線
+      kk.strokeStyle = 'rgba(150,150,155,.45)'; kk.lineWidth = 2;
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + 0.3, ph = mod(u * 2.2 + i * 0.37, 1); const r0 = 120 + ph * 160; kk.beginPath(); kk.moveTo(Math.cos(a) * r0 * 1.9, Math.sin(a) * r0 * 0.8); kk.lineTo(Math.cos(a) * (r0 + 40) * 1.9, Math.sin(a) * (r0 + 40) * 0.8); kk.stroke(); }
+    }
+  });
+  return `${Math.round(sp * 3.6)}km/h`;
+});

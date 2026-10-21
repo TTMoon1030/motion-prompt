@@ -1,0 +1,35 @@
+// Motion Prompt #125 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#125
+//
+// Pulse
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 05 · 分類: 動態技巧
+// 會發生什麼: 愛心像心跳一樣，每次「噗通、噗通」兩下脹縮，並有輪廓環向外擴散。
+// 動態規格:
+//   - 珊瑚色愛心。每 1.175 秒一拍（4.7 秒共 4 拍），每拍是「噗通、噗通」兩段。
+//   - 縮放 = 1 + 0.26·G(0.2 秒, 寬 0.065) + 0.15·G(0.44 秒, 寬 0.07)，其中 G = e^(−((t − 中心) ÷ 寬)²)：迅速膨脹又立刻回落。
+//   - 從 0.16 秒和 0.40 秒起各擴散一個愛心形輪廓線：0.8 秒內縮放 1.2→2.4，easeOut（三次）。
+//   - 擴散時不透明度 0.75→0（第二個為 60% 的濃度），線寬 8.5→1.5 px。
+// 使用時機: 用在按讚、錄音中或直播中的標示，或希望被按下的按鈕，讓它看起來有生命感。
+// 標籤: pulse, heartbeat, throb, scale, loop, like, attention
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#125
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 05
+// 05 パルス（ハートが鼓動のように、ドクン・ドクンと大きさを脈打たせる）
+CELLS[4] = (k, w, h, u) => {
+  stage(k);
+  const T = CYC / 4, lu = mod(u, T), X = w / 2, Y = h / 2 + 10;
+  const g = (c, s) => Math.exp(-Math.pow((lu - c) / s, 2));
+  const b = 0.26 * g(0.2, 0.065) + 0.15 * g(0.44, 0.07) + 0.26 * Math.exp(-Math.pow((lu - T - 0.2) / 0.065, 2));
+  for (const [t0, s] of [[0.16, 1], [0.4, 0.6]]) {
+    const q = P(lu, t0, t0 + 0.8); if (q <= 0 || q >= 1) continue;
+    k.save(); k.translate(X, Y); const sc = 1.2 + 1.2 * eOut(q); k.scale(sc, sc); heartPath(k, 44);
+    k.strokeStyle = C.coral; k.globalAlpha = (1 - q) * 0.75 * s; k.lineWidth = (7 * (1 - q) + 1.5) / sc; k.stroke(); k.restore();
+  }
+  k.globalAlpha = 1;
+  k.save(); k.translate(X, Y); k.scale(1 + b, 1 + b); heartPath(k, 44); k.fillStyle = C.coral; k.fill();
+  k.fillStyle = 'rgba(255,255,255,.75)'; k.beginPath(); k.ellipse(-30, -28, 9, 6, -0.7, 0, 7); k.fill(); k.restore();
+};

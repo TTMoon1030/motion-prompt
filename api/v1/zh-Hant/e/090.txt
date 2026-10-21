@@ -1,0 +1,44 @@
+// Motion Prompt #090 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#090
+//
+// Lazy Loading / Lazy loading
+// 包: lp (Landing Page 與網站效果) · element 18 · 分類: 載入、轉場與持續動態
+// 會發生什麼: 灰色佔位框捲動進入畫面後，中央的載入圖示開始旋轉，圖片載入完成後依序淡入；最上面一列一開始就已載入。
+// 動態規格:
+//   - 3 × 3 排列的 151 × 92 佔位框；第一列一開始就顯示。捲動量：0.35–1.1 秒 0→110 px，1.7–2.5 秒 110→225 px，3.5–4.5 秒 225→0（三次方 easeInOut）。
+//   - 佔位框上緣越過視窗下緣（168 px）時開始載入，每一欄比左邊那一欄晚 0.12 秒。
+//   - 載入中的 0.45 秒，佔位框中央有載入圖示旋轉（半徑 11，每 0.8 秒轉一圈）。
+//   - 接著圖片在 0.35 秒內淡入，不透明度 0→1（三次方 easeOut）。尚未載入的佔位框顯示圖片圖示。
+//   - 離開畫面下緣的佔位框，會在看不到的地方重設回未載入狀態。
+// 使用時機: 想在圖片很多的頁面上加快首次顯示速度時。
+// 標籤: lazy-loading, lazy-load, images, placeholder, performance, spinner, gallery
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#090
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 18
+// 18 遅延読み込み（画面に入った画像だけ、その時点で読み込まれて表示される）
+CELLS[17] = (k, w, h, u) => {
+  frame(k);
+  const SY = t => steps([[0.35, 0], [1.1, 110], [1.7, 110], [2.5, 225], [3.5, 225], [4.5, 0]], t), y = SY(u);
+  const COLX = [15, 180, 345], IW = 151, IH = 92, ROWS = [12, 168, 276], WAIT = 0.45, FADE = 0.35;
+  view(k, () => {
+    k.save(); k.translate(0, -y);
+    txt(k, 'ギャラリー', 15, 140, `800 18px ${JP}`, C.ink); bars(k, 120, 128, 200, 1);
+    ROWS.forEach((top, r) => COLX.forEach((x, c) => {
+      const t0 = r === 0 ? -1e9 : enteredAt(SY, top, VH, u), age = t0 === null ? -1 : u - t0 - c * 0.12;
+      k.fillStyle = C.skel; rr(k, x, top, IW, IH, 6); k.fill();
+      if (age < WAIT + FADE) {   // まだの画像: 灰色の枠と画像の印
+        k.save(); k.translate(x + IW / 2, top + IH / 2); k.strokeStyle = '#B9C1CF'; k.lineWidth = 2; k.lineJoin = 'round';
+        if (age >= 0 && age < WAIT) spinner(k, 0, 0, 11, u, C.blue);
+        else { rr(k, -15, -11, 30, 22, 3); k.stroke(); k.beginPath(); k.moveTo(-11, 7); k.lineTo(-3, -1); k.lineTo(3, 5); k.lineTo(7, 1); k.lineTo(11, 6); k.stroke(); }
+        k.restore();
+      }
+      if (age >= WAIT) { k.save(); k.globalAlpha = eOut(P(age, WAIT, WAIT + FADE)); pic(k, x, top, IW, IH, (r + c) % 3, 6); k.restore(); }
+    }));
+    k.restore();
+    sbar(k, y / 225, 0.45);
+  });
+};

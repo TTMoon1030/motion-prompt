@@ -1,0 +1,41 @@
+// Motion Prompt #103 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#103
+//
+// 黃金時刻 / Golden hour
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 07 · 分類: 打光方式與時段
+// 會發生什麼: 太陽降到地平線上方，天空與地面染成橘色，人物左側亮起，路燈與樹的影子往右拉得很長。
+// 動態規格:
+//   - 場景 1：地平線（y 150）前方是胸部以上的人物（頭部中心 x 270, y 78，半徑 29 px，不畫五官與頭髮）。
+//   - 太陽：半徑 18 px，從（x 110, y −30）移到（x 96, y 136），一半被山丘遮住
+//   - 顏色：天空 #FAF9F7 → 上方 #FFE8BC、靠近地平線 #FFCF80，地面 #F1F0EE → #F6DDB0；人物受光 #FFB547，陰影 #3E3650
+//   - 頭部：光從左側約 66° 打來，明暗交界右側為陰影；身體左側受光、右側為陰影
+//   - 影子：從路燈與樹的底部往右延伸，長度 0 → 150 px（#DDAA6E）；右上時間 12:00 → 17:40
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想讓畫面溫暖、懷舊、溫柔時。
+// 標籤: golden hour, magic hour, sunset light, warm light, long shadows, low sun
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#103
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 07
+// ゴールデンアワー: 太陽が地平線近くまで下り、全体が橙に染まって影が長く伸びる
+CELLS[6] = cell((k, u) => {
+  const a = env(u), R = PR, W = torsoW(R);
+  const GOLD = {
+    sky: '#FFE8BC', sky2: '#FFCF80', far: '#F2C58C', mid: '#E8B27A', ground: '#F6DDB0', ground2: '#ECC892', mark: '#F6DDB0', cast: '#DDAA6E',
+    bld: '#F7DCAE', edge: '#D9AE76', win: '#ECC892', winOff: '#ECC892', tree: '#E9C08A', trunk: '#C9965E', post: '#B98A58', bulb: '#C9965E',
+    person: '#5C5470', shade: '#3E3650', lit: '#FFB547', car: '#A08E8E', glass: '#F6DDB0', tire: '#3E3650', sun: '#F59A24', glow: '#FFD48A'
+  };
+  const p = pal(BASE, GOLD, a);
+  stagePortrait(k, p, { sun: [lerp(110, 96, a), lerp(-30, 136, a), 18, 1], cast: lerp(0, 150, a) });
+  const lit = mixc(p.person, GOLD.lit, a), sh = mixc(p.person, GOLD.shade, a);
+  bust(k, PX, PY, R, p.person, kk => {
+    kk.fillStyle = lit; kk.beginPath(); kk.arc(PX, PY, R, 0, TAU); kk.fill();
+    headShade(kk, PX, PY, R, 1.15, 1, sh);
+    torso(kk, PX, PY, R, PX - W, PX - 0.5 * W, lit);
+    torso(kk, PX, PY, R, PX + 0.4 * W, PX + W, sh);
+  });
+  hud(k, clock(lerp(720, 1060, a)));
+});

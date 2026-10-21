@@ -1,0 +1,36 @@
+// Motion Prompt #014 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#014
+//
+// 動態殘影 / Motion trail
+// 包: motion (Motion Graphics 動態手法) · element 14 · 分類: 動態質感
+// 會發生什麼: 沿 8 字形移動的球，身後拖著逐漸淡去的殘影。
+// 動態規格:
+//   - 球（珊瑚色，半徑 25，中心為半徑 11 的白點）每 4.7 秒繞 8 字形 1 圈：x = 196·sin(a)，y = 62·sin(2a)，a 以等速前進
+//   - 15 個殘影，每個沿路徑往回放在早 0.105 rad（約 0.079 秒）的位置
+//   - 殘影半徑 22→6，透明度 0.9 × (1 − i/15) + 0.05，越舊的越小、越淡
+//   - 殘影顏色由新到舊依序為珊瑚色 → 黃色 → 藍色
+//   - 先畫最舊的殘影，最後才畫球本體
+// 使用時機: 想呈現速度或軌跡時使用，例如飛行物、游標、光點。
+// 標籤: trail, motion-trail, echo, afterimage, ghost, path, speed
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#014
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 14
+// 14 モーショントレイル（動いた跡に、残像が尾を引く）
+CELLS[13] = (k, w, h, u) => {
+  stage(k);
+  const X = w / 2, Y = h / 2 + 2, A = 196, B = 62, th = u / CYC * Math.PI * 2;
+  const pt = a => [X + A * Math.sin(a), Y + B * Math.sin(2 * a)];
+  const N = 15;
+  for (let i = N; i >= 1; i--) {
+    const [x, y] = pt(th - i * 0.105), f = i / N;
+    k.globalAlpha = 0.9 * (1 - f) + 0.05; k.fillStyle = f < 0.5 ? mix(C.coral, C.yel, f * 2) : mix(C.yel, C.blue, (f - 0.5) * 2);
+    k.beginPath(); k.arc(x, y, lerp(22, 6, f), 0, 7); k.fill();
+  }
+  k.globalAlpha = 1; const [x, y] = pt(th);
+  k.fillStyle = C.coral; k.beginPath(); k.arc(x, y, 25, 0, 7); k.fill();
+  k.fillStyle = '#fff'; k.beginPath(); k.arc(x, y, 11, 0, 7); k.fill();
+};

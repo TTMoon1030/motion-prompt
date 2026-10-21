@@ -1,0 +1,34 @@
+// Motion Prompt #064 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#064
+//
+// 分頁（Pagination） / Pagination
+// 包: ui (UI 元件名稱) · element 16 · 分類: 選擇與切換元件
+// 會發生什麼: 依序點擊頁碼 2、3，藍色圓形跟著移動，上方列表隨之切換；最後回到 1。
+// 動態規格:
+//   - 4.5 秒循環，卡片 542×191。「‹ 1 2 3 4 5 ›」置中排列，每個直徑 36、間距 8 px，位於 y 160。目前頁碼以藍色圓形（半徑 18）標示，文字為白色。
+//   - 游標在 1.0 秒點擊 2，2.1 秒點擊 3，3.3 秒點擊 1。
+//   - 藍色圓形每次以 0.2 秒、easeInOutCubic 移動，每頁 44 px（從 3 回到 1 時一次移動 88 px）。
+//   - 上方三列的列表在 1.05、2.15、3.35 秒前後各 0.2 秒內，不透明度依 1 → 0 → 1 變化，並在最低點替換內容。
+// 使用時機: 想把搜尋結果或文章列表等長列表分成有頁碼的多頁時使用。
+// 標籤: pagination, pager, page-numbers, paging, next-prev, navigation
+// 尺寸: 542x191 px · 一輪: 4.5 s
+// Needs: kit ui -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/ui.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#064
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 16
+// 16 ページネーション（Pagination）
+CELLS[15] = ui((w, h, t) => {
+  const page = t < 1.05 ? 0 : t < 2.15 ? 1 : t < 3.35 ? 2 : 0;
+  const fade = Math.min(...[1.05, 2.15, 3.35].map(c => Math.abs(t - c) < .2 ? Math.abs(t - c) / .2 : 1));
+  X.save(); X.globalAlpha = fade;
+  for (let k = 0; k < 3; k++) { const y = 10 + k * 40; fillRR(24, y, 52, 32, 6, (k + page) % 3 === 0 ? C.mb : C.line); bar(90, y + 4, [200, 160, 240, 180][(k + page) % 4], C.line2, 10); bar(90, y + 20, [320, 280, 360][(k + 2 * page) % 3], C.line, 7); }
+  X.restore();
+  const items = ['‹', '1', '2', '3', '4', '5', '›'], d = 36, g = 8, total = items.length * d + (items.length - 1) * g, x0 = (w - total) / 2;
+  const pos = eio(seg(t, 1.0, 1.2)) + eio(seg(t, 2.1, 2.3)) - 2 * eio(seg(t, 3.3, 3.5));
+  circle(x0 + (1 + pos) * (d + g) + d / 2, 160, d / 2, C.blue);
+  items.forEach((s, i) => { const cx = x0 + i * (d + g) + d / 2; const on = i >= 1 && i <= 5 && Math.abs(pos - (i - 1)) < .5; text(s, cx, 161, i === 0 || i === 6 ? 22 : 16, on ? '#fff' : '#666', 700, 'center', NUMF); });
+  const px = i => x0 + i * (d + g) + d / 2 + 4;
+  pointer([[.3, w + 30, h + 30], [.95, px(2), 166], [1.6, px(2), 166], [2.05, px(3), 166], [2.8, px(3), 166], [3.25, px(1), 166], [3.65, px(1), 166], [4.25, w + 30, h + 30]], [1.0, 2.1, 3.3], t);
+});

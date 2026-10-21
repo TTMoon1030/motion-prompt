@@ -1,0 +1,30 @@
+// Motion Prompt #118 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#118
+//
+// 底片顆粒 / Film grain
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 22 · 分類: 調色與風格
+// 會發生什麼: 同一幅風景整體覆上一層細緻顆粒，顏色略微偏向溫暖的奶油色。
+// 動態規格:
+//   - 場景 3：左側為胸像（頭部中心 x 140, y 82，半徑 28 px），右側為山丘、房子、樹與太陽（x 432, y 54，半徑 15 px）。
+//   - 顆粒：2,600 個方形（固定亂數種子），大小 0.8–1.7 px；55% 為深色 #3A3530，45% 為白色
+//   - 顆粒不透明度：16–38% × 效果量；顆粒位置固定不動（不閃爍）
+//   - 顏色：所有顏色往 #F2DDBE 靠近 16%
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想去除數位影像的光滑感、加上底片質感時。
+// 標籤: film grain, grain, noise, analog, 35mm film, texture, warm tone
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#118
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 22
+// フィルムグレイン: 細かい粒子が全体に乗り、全体が少し暖かい色に寄る
+CELLS[21] = cell((k, u) => {
+  const a = env(u);
+  const FILM = mapPal(BASE, c => mixc(c, '#F2DDBE', 0.16));
+  const p = pal(BASE, FILM, a);
+  const G = once('grain', () => { const r = rng(22), o = []; for (let i = 0; i < 2600; i++) o.push([r() * CW, r() * CH, 0.8 + r() * 0.9, r() < 0.55 ? 0 : 1, 0.16 + r() * 0.22]); return o; });
+  const grain = kk => { kk.save(); for (const [x, y, s, d, al] of G) { kk.globalAlpha = al * a; kk.fillStyle = d ? '#FFFFFF' : '#3A3530'; kk.fillRect(x, y, s, s); } kk.restore(); };
+  stageLand(k, p); grain(k);
+});

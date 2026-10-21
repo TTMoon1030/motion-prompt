@@ -1,0 +1,38 @@
+// Motion Prompt #081 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#081
+//
+// Hover 浮起效果 / Hover lift
+// 包: lp (Landing Page 與網站效果) · element 09 · 分類: 滑鼠與點擊的互動
+// 會發生什麼: 只有游標所在的卡片會稍微浮起、陰影擴大；游標離開後回到原位。
+// 動態規格:
+//   - 三張卡片（146 × 128，圓角 10）。游標由左到右依序在每張上停留約 1 秒。
+//   - 滑鼠移入時卡片在 0.3 秒內上移 10 px（三次方 easeOut）；移開時同樣以 0.3 秒回到原位（同 CSS transition）。
+//   - 陰影隨浮起一起變化：模糊 6→22 px，y 位移 2→12 px，不透明度 0.08→0.22。
+//   - 頁面為淺灰色，卡片為白色，讓陰影看得清楚。
+// 使用時機: 想讓卡片和按鈕看起來可以點擊時。
+// 標籤: hover, lift, float, card, shadow, translatey, interaction
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#081
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 09
+// 09 ホバーで浮き上がる（カーソルが乗ったカードが、影をつけて少し持ち上がる）
+CELLS[8] = (k, w, h, u) => {
+  frame(k);
+  const CX = [26, 192, 358], CY = 18, CWD = 146, CHT = 128, LIFT = 10;
+  const cur = t => path([[0, 70, 160], [0.45, 96, 78], [1.4, 110, 86], [1.62, 262, 80], [2.5, 276, 88], [2.72, 428, 80], [3.6, 440, 88], [4.0, 470, 160], [4.8, 70, 160]], t);
+  view(k, () => {
+    k.fillStyle = C.soft; k.fillRect(0, 0, VW, VH);
+    for (let i = 0; i < 3; i++) {
+      const inside = t => { const [x, y] = cur(t); return x > CX[i] && x < CX[i] + CWD && y > CY && y < CY + CHT; };
+      const q = trans(inside, u, 0.3), x = CX[i], y = CY - LIFT * q;
+      k.save(); k.shadowColor = `rgba(28,35,51,${0.08 + 0.14 * q})`; k.shadowBlur = 6 + 16 * q; k.shadowOffsetY = 2 + 10 * q;
+      k.fillStyle = '#fff'; rr(k, x, y, CWD, CHT, 10); k.fill(); k.restore();
+      pic(k, x + 8, y + 8, CWD - 16, 66, i, 6);
+      txt(k, ['山の宿', '海の宿', '星の宿'][i], x + 12, y + 96, `800 13px ${JP}`, C.ink); bars(k, x + 12, y + 106, 100, 1);
+    }
+    const [cx, cy] = cur(u); cursor(k, cx, cy);
+  });
+};

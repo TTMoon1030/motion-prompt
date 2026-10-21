@@ -1,14 +1,14 @@
 {
   "name": "motion-prompt",
-  "displayName": "Motion Prompt",
+  "displayName": "Motion Prompt（繁體中文版）",
   "version": "0.1.0",
-  "description": "A numbered library of the names of motion-graphics moves, camera moves and transitions, UI components, landing-page and web effects, and photo looks and lighting, each with a moving sample. Ask your agent to open the library, pick what you like in the browser, and it applies your picks to your video, web or image project with the published timings and easing.",
+  "description": "有編號的「名稱」資料庫：Motion Graphics 動態手法、運鏡與轉場、UI 元件、Landing Page 與網站效果、攝影的打光與風格，每個名稱都附會動的範例。請 AI 打開資料庫、在瀏覽器裡挑選，它就會照公開的時間與緩動數值，把你挑的效果套進影片、網頁或圖片專案。繁體中文版，fork 自 showheyohtaki/motion-prompt。",
   "author": {
     "name": "Shohei Ohtaki",
     "url": "https://x.com/showheyohtaki"
   },
-  "homepage": "https://showheyohtaki.github.io/motion-prompt/",
-  "repository": "https://github.com/showheyohtaki/motion-prompt",
+  "homepage": "https://ttmoon1030.github.io/motion-prompt/",
+  "repository": "https://github.com/TTMoon1030/motion-prompt",
   "license": "MIT",
   "keywords": [
     "motion-graphics",
@@ -16,6 +16,8 @@
     "video",
     "canvas",
     "remotion",
-    "skill"
+    "skill",
+    "zh-Hant",
+    "traditional-chinese"
   ]
 }

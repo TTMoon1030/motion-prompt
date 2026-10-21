@@ -1,0 +1,39 @@
+// Motion Prompt #015 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#015
+//
+// 粒子特效 / Particles
+// 包: motion (Motion Graphics 動態手法) · element 15 · 分類: 動態質感
+// 會發生什麼: 粒子不斷從下方的發射點噴出，四散後落下。
+// 動態規格:
+//   - 84 個粒子，從底部中央（水平置中、距底邊 20 px）發射
+//   - 初速：水平 ±190 px/秒，向上 250–400 px/秒。重力 470 px/秒²（拋物線軌跡）
+//   - 每個粒子以 2.35 秒或約 1.57 秒為週期重複，起始偏移為亂數（固定種子，每次播放畫面都相同）
+//   - 壽命最長 1.5 秒：最初 0.06 秒淡入，最後 30% 淡出。縮放比例 1.15→0.7
+//   - 形狀為圓形、方形、三角形（大小 5–11 px），顏色有藍色、珊瑚色、黃色、薄荷綠，以最高 ±4.5 rad/秒旋轉
+// 使用時機: 想增添慶祝感或熱鬧氣氛時使用，可取代彩紙或火花。
+// 標籤: particles, confetti, emitter, fountain, gravity, celebration, sparks
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#015
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 15
+// 15 パーティクル（粒が次々と噴き出して、飛び散って落ちる）
+const PARTS = (() => { const R = rand(15), a = []; for (let i = 0; i < 84; i++) { const n = R() < 0.5 ? 2 : 3; a.push({ T: CYC / n, ph: R() * CYC, vx: (R() - 0.5) * 2 * 190, vy: -(250 + R() * 150), sz: 5 + R() * 6, col: PAL[i % 4], kind: i % 3, spin: (R() - 0.5) * 9 }); } return a; })();
+CELLS[14] = (k, w, h, u) => {
+  stage(k);
+  const X = w / 2, Y = h - 20, G = 470;
+  for (const p of PARTS) {
+    const t = mod(u + p.ph, p.T), life = Math.min(p.T, 1.5); if (t > life) continue;
+    const x = X + p.vx * t, y = Y + p.vy * t + 0.5 * G * t * t, a = Math.min(1, t / 0.06) * (1 - smooth(P(t, life * 0.7, life))), sc = lerp(1.15, 0.7, t / life);
+    k.globalAlpha = a; k.fillStyle = p.col; k.save(); k.translate(x, y); k.rotate(t * p.spin); k.scale(sc, sc);
+    if (p.kind === 0) { k.beginPath(); k.arc(0, 0, p.sz, 0, 7); k.fill(); }
+    else if (p.kind === 1) { k.fillRect(-p.sz, -p.sz, p.sz * 2, p.sz * 2); }
+    else { k.beginPath(); k.moveTo(0, -p.sz * 1.3); k.lineTo(p.sz * 1.2, p.sz); k.lineTo(-p.sz * 1.2, p.sz); k.closePath(); k.fill(); }
+    k.restore();
+  }
+  k.globalAlpha = 1;
+  k.fillStyle = C.navy3; rr(k, X - 70, h - 12, 140, 30, 10); k.fill();
+  k.fillStyle = '#fff'; rr(k, X - 30, h - 22, 60, 30, 10); k.fill();
+};

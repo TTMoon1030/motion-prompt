@@ -12,11 +12,11 @@ import vm from 'node:vm';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const SITE = 'https://showheyohtaki.github.io/motion-prompt/';
-const REPO = 'https://github.com/showheyohtaki/motion-prompt';
+const SITE = 'https://ttmoon1030.github.io/motion-prompt/';   // Traditional Chinese edition (fork of showheyohtaki/motion-prompt)
+const REPO = 'https://github.com/TTMoon1030/motion-prompt';
 const LICENCE = 'MIT License (c) 2026 Shohei Ohtaki';
 const VERSION = 1;
-const LANGS = ['ja', 'en'];   // languages of the gallery, the API folders and the copyable prompt
+const LANGS = ['zh-Hant', 'ja', 'en'];   // languages of the gallery, the API folders and the copyable prompt
 const BASE_LANG = 'en';       // every text field needs this one; any other language code is optional
 
 const args = process.argv.slice(2);
@@ -36,14 +36,31 @@ const isStr = v => typeof v === 'string' && v.trim() !== '';
 // ---------------------------------------------------------------- prompt template
 // This function is also written into assets/catalog.js (as source text), so the site's
 // "copy prompt" button and api/v1/<lang>/p/<id>.txt can never drift apart. Keep it self-contained.
-function mpPrompt(el, packTitle, lang) {
-  var base = 'https://showheyohtaki.github.io/motion-prompt/';
+function mpPrompt(el, packTitle, lang, site) {
+  var base = site || 'https://ttmoon1030.github.io/motion-prompt/';
   var en = lang === 'en';
   var spec = el.spec[lang].map(function (s) { return '- ' + s; }).join('\n');
   var ref = base + 'api/v1/' + lang + '/e/' + el.id + '.txt';
   var kit = base + 'api/v1/kit/' + el.pack + '.js';
   var same = el.name.en === el.name.ja;
   var mean = el.meaning && (el.meaning[lang] || el.meaning.en);
+  if (lang === 'zh-Hant') {
+    var zh = el.name['zh-Hant'] || el.name.en;
+    return [
+      '請使用「' + zh + '」' + (zh !== el.name.en ? '（' + el.name.en + '）' : '') + '，這是「' + packTitle + '」裡的一個名稱。',
+      'Motion Prompt #' + el.id,
+      ''
+    ].concat(mean ? ['它是什麼：' + mean] : [], [
+      '範例中會發生的事：' + el.summary['zh-Hant'],
+      '規格：',
+      spec,
+      '使用時機：' + el.use['zh-Hant'],
+      '',
+      '參考實作（Canvas 2D，一個畫面只由時間決定的函式）：' + ref,
+      '共用輔助程式碼：' + kit,
+      '請完全保留參考實作的形狀、時間點與緩動（easing）數值，只把裡面的文字、顏色和素材換成符合我正在製作的內容。'
+    ]).join('\n');
+  }
   if (en) {
     return [
       'Please use "' + el.name.en + '"' + (same ? '' : ' (' + el.name.ja + ')') + ', one of the names in "' + packTitle + '".',
@@ -346,12 +363,24 @@ const T = {
   en: { what: 'What happens', spec: 'Motion spec', use: 'When to use it', size: 'Size', cycle: 'Cycle', needs: 'Needs', demo: 'Live demo', pack: 'Pack', cat: 'Category', tags: 'Tags',
     sig: 'cells[i](k, w, h, u): k = CanvasRenderingContext2D (already cleared and wrapped in save/restore by the caller), w,h = size, u = seconds in [0, cycle). The picture depends only on u.',
     code: 'Element code starts here. CELLS, constants and helpers live in the kit.' },
+  'zh-Hant': { what: '會發生什麼', spec: '動態規格', use: '使用時機', size: '尺寸', cycle: '一輪', needs: 'Needs', demo: '會動的範例', pack: '包', cat: '分類', tags: '標籤',
+    sig: 'cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。',
+    code: '以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。' },
 };
+
+// "Main name / other name": the other name is English (Japanese for English). A Chinese name that already is the
+// English term gets no second name.
+function nameOf(el, lang) {
+  const main = el.name[lang];
+  const alt = lang === 'en' ? el.name.ja : el.name.en;
+  return { main, alt: alt && alt !== main ? alt : '' };
+}
 
 function elementTxt(el, lang) {
   const t = T[lang], p = packOf[el.pack];
   const cat = p.categories.find(c => c.slug === el.category);
-  const name = lang === 'ja' ? `${el.name.ja} / ${el.name.en}` : `${el.name.en} / ${el.name.ja}`;
+  const nm = nameOf(el, lang);
+  const name = nm.alt ? `${nm.main} / ${nm.alt}` : nm.main;
   const head = [
     `Motion Prompt #${el.id} · ${LICENCE} · ${SITE}#${el.id}`,
     '',
@@ -378,8 +407,8 @@ function kitJs(p) {
   const head = [
     `Motion Prompt ${range} · ${LICENCE} · ${SITE}#${p.first}`,
     '',
-    `Kit for pack "${p.pack}" (${p.title.en} / ${p.title.ja}): the constants and helpers its elements share.`,
-    `Elements ${range} · ${W}x${H} px · cycle ${C} s. Element code: ${SITE}api/v1/en/e/<id>.txt (or /ja/).`,
+    `Kit for pack "${p.pack}" (${p.title.en} / ${p.title['zh-Hant']} / ${p.title.ja}): the constants and helpers its elements share.`,
+    `Elements ${range} · ${W}x${H} px · cycle ${C} s. Element code: ${SITE}api/v1/zh-Hant/e/<id>.txt (or /ja/, /en/).`,
     ...(p.fonts.length ? [`Fonts used: ${p.fonts.map(f => `${f.family} (${SITE}packs/${p.pack}/${f.url})`).join(', ')}. Load them before drawing.`] : []),
     '',
     'Run one element standalone in a browser:',
@@ -404,7 +433,8 @@ function catalogTsv(lang) {
   const head = `# Motion Prompt catalog (${lang}) · ${catalog.count} elements · ${SITE} · columns: id\tpack\tcategory\ttitle\ttags\tsummary`;
   const rows = catalog.elements.map(el => {
     const cat = packOf[el.pack].categories.find(c => c.slug === el.category);
-    const title = lang === 'ja' ? `${el.name.ja} (${el.name.en})` : `${el.name.en} (${el.name.ja})`;
+    const nm = nameOf(el, lang);
+    const title = nm.alt ? `${nm.main} (${nm.alt})` : nm.main;
     return [el.id, el.pack, cat ? cat[lang] : el.category, title, el.tags.join(','), el.summary[lang]].map(tsvCell).join('\t');
   });
   return [head, ...rows].join('\n') + '\n';
@@ -462,27 +492,40 @@ function packReadme(src, p, lang) {
     out.push('');
   }
   out.push(`${d.more} \`api/v1/${apiLang}/e/<id>.txt\` ([#${p.first}](../../api/v1/${apiLang}/e/${p.first}.txt)).`, '');
-  out.push(`[${d.all}](../README.md)`, '');
+  out.push(`[${d.all}](../${INDEX[lang] ? readmeName(lang) : 'README.md'})`, '');
   return out.join('\n');
 }
 
-function packsIndex() {
+// packs/README.md (English) and packs/README.<lang>.md for the languages that have a block here.
+const INDEX = {
+  en: { h: 'Packs', intro: 'A pack is one field\'s set of names. Each list below is readable here on GitHub; the gallery shows the same names moving.',
+    cols: ['Numbers', 'Pack', 'Names', 'Lists'], add: 'To add a pack for your field, or a language to an existing pack, see [CONTRIBUTING.md](../CONTRIBUTING.md).',
+    langs: 'Languages', other: [['繁體中文', 'README.zh-Hant.md']] },
+  'zh-Hant': { h: '所有包', intro: '一個包就是一個領域的一組名稱。下面每份名稱一覽都可以直接在 GitHub 上閱讀；圖庫裡會看到同樣的名稱實際動起來。',
+    cols: ['編號', '包', '名稱數', '一覽'], add: '想替你的領域新增一個包，或替現有的包加上一種語言，請看 [CONTRIBUTING.zh-Hant.md](../CONTRIBUTING.zh-Hant.md)。',
+    langs: '語言', other: [['English', 'README.md']] },
+};
+function packsIndex(lang) {
+  const x = INDEX[lang];
   const out = [
-    `<!-- ${DOC.en.gen} -->`,
+    `<!-- ${(DOC[lang] || DOC.en).gen} -->`,
     '',
-    '# Packs',
+    `# ${x.h}`,
     '',
-    'A pack is one field\'s set of names. Each list below is readable here on GitHub; the gallery shows the same names moving.',
+    `${x.langs}: ${x.other.map(([n, f]) => `[${n}](${f})`).join(' / ')}`,
     '',
-    '| Numbers | Pack | Names | Lists |',
+    x.intro,
+    '',
+    `| ${x.cols.join(' | ')} |`,
     '|---|---|---|---|',
   ];
+  const order = l => (l === lang ? 0 : l === BASE_LANG ? 1 : 2);
   for (const src of packs) {
     const p = packOf[src.dir];
-    const lists = src.langs.map(l => `[${LANG_NAME[l] || l}](${p.pack}/${readmeName(l)})`).join(' · ');
-    out.push(`| ${p.first}–${p.last} | \`${p.pack}\` — ${mdCell(src.raw.title[BASE_LANG])} | ${p.count} | ${lists} |`);
+    const lists = [...src.langs].sort((a, b) => order(a) - order(b)).map(l => `[${LANG_NAME[l] || l}](${p.pack}/${readmeName(l)})`).join(' · ');
+    out.push(`| ${p.first}–${p.last} | \`${p.pack}\` — ${mdCell(tx(src.raw.title, lang))} | ${p.count} | ${lists} |`);
   }
-  out.push('', 'To add a pack for your field, or a language to an existing pack, see [CONTRIBUTING.md](../CONTRIBUTING.md).', '');
+  out.push('', x.add, '');
   return out.join('\n');
 }
 
@@ -503,12 +546,12 @@ for (const lang of LANGS) {
   files.set(`api/v1/${lang}/catalog.tsv`, catalogTsv(lang));
   for (const el of catalog.elements) {
     files.set(`api/v1/${lang}/e/${el.id}.txt`, elementTxt(el, lang));
-    files.set(`api/v1/${lang}/p/${el.id}.txt`, mpPrompt(el, packOf[el.pack].title[lang], lang) + '\n');
+    files.set(`api/v1/${lang}/p/${el.id}.txt`, mpPrompt(el, packOf[el.pack].title[lang], lang, SITE) + '\n');
   }
 }
 for (const p of catalog.packs) files.set(`api/v1/kit/${p.pack}.js`, kitJs(p));
 for (const src of packs) for (const lang of src.langs) files.set(`packs/${src.dir}/${readmeName(lang)}`, packReadme(src, packOf[src.dir], lang));
-files.set('packs/README.md', packsIndex());
+for (const lang of Object.keys(INDEX)) files.set(`packs/${readmeName(lang)}`, packsIndex(lang));
 files.set('assets/catalog.js',
   `/* Generated by tools/build.mjs — do not edit. Source of truth: packs/<pack>/{meta.json,pack.js} */\n` +
   `window.MP_CATALOG = ${JSON.stringify(catalog)};\n` +

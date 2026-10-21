@@ -1,0 +1,31 @@
+// Motion Prompt #041 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#041
+//
+// 跳接 / Jump cut
+// 包: camera (運鏡與轉場) · element 17 · 分類: 轉場
+// 會發生什麼: 攝影機位置與構圖都不變，只有人物的位置和時鐘跳動；在同一場景中省略時間。
+// 動態規格:
+//   - 銜接：不加任何效果的直接切換（0 影格）；5 個鏡頭各 0.94 秒（4.7 秒 ÷ 5）
+//   - 攝影機：每個鏡頭的位置和構圖完全相同（高度 1.4 m，朝正前方）；背景連 1 px 都不移動
+//   - 改變的部分：人物（7 m 外）的橫向位置跳動，-2.2 m → 1.4 m → -0.4 m → 2.4 m → 0.6 m；第 2、4 個鏡頭雙臂舉起
+//   - 每個鏡頭中人物都靜止（跳動只靠位置與姿勢的差異呈現）
+//   - 右上角時鐘：10:02 → 10:17 → 10:41 → 11:06 → 11:30，表示在同一地點跳過了時間
+//   - 第 5 個鏡頭也直接切回第 1 個鏡頭
+// 使用時機: 要壓縮談話或作業中的停頓、加快節奏，或快速交代時間經過時。
+// 標籤: jump cut, cut, time skip, same framing, vlog, ellipsis, edit
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#041
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 17
+// 17 ジャンプカット（同じ画角で人物の位置と時刻だけ飛ぶ）
+CELLS[16] = shot((k, w, h, u) => {
+  const shots = [[-2.2, 0], [1.4, 1], [-0.4, 0], [2.4, 1], [0.6, 0]];
+  const times = ['10:02', '10:17', '10:41', '11:06', '11:30'];
+  const i = Math.min(4, Math.floor(u / (CYC / 5)));
+  const [x, arm] = shots[i];
+  world(k, w, h, cam({ y: 1.4 }), { person: { x, z: 7, armUp: !!arm } });
+  return times[i];
+});

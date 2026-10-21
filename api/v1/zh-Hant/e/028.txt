@@ -1,0 +1,25 @@
+// Motion Prompt #028 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#028
+//
+// Zoom in
+// 包: camera (運鏡與轉場) · element 04 · 分類: 鏡頭運動
+// 會發生什麼: 攝影機不動，只把焦距拉長，整個畫面以相同比例放大。
+// 動態規格:
+//   - 攝影機：位置與方向固定（高度 1.5 m）；只改焦距，330 px → 1200 px（顯示為 24mm → 87mm，約 3.6 倍）
+//   - 指數插值：f = 330 × (8/2.2)^p，p 為 0.5 秒到 3.4 秒（2.9 秒）的三次緩入緩出
+//   - 被攝體：人物靜止站在前方 8 m 處；最終大小與 03 Dolly in 相同（約 3.6 倍）
+//   - 無視差：前景的木樁與岩石、人物、建築、山全部以相同比例放大（彼此的重疊關係不變）
+//   - 復位：3.4–4.2 秒停住，最後 0.5 秒交叉淡化回起始狀態（一輪 4.7 秒）
+//   - 右上角以 mm 顯示焦距（24mm → 87mm）
+// 使用時機: 不移動攝影機、把注意力集中到一點時；畫面比 Dolly in 更平面，帶有旁觀的感覺。
+// 標籤: zoom, zoom in, focal length, lens, magnify, telephoto, camera move
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#028
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 04
+// 04 ズームイン: 位置は固定・焦点距離だけ伸びる（全体が同じ比率で拡大）
+CELLS[3] = shot(camCell((k, w, h, p) => world(k, w, h, cam({ f: F0 * Math.pow(8 / 2.2, p) }), { person: { z: 8 }, fg: [[-1.5, 3.6], [1.6, 4.8, 'rock']] }),
+  p => mm(F0 * Math.pow(8 / 2.2, p))));

@@ -1,0 +1,30 @@
+// Motion Prompt #117 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#117
+//
+// Teal & Orange / Teal and orange
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 21 · 分類: 調色與風格
+// 會發生什麼: 同一幅風景中，天空、山丘、地面與背光的人物偏向青綠色，人物受光的邊緣與太陽偏向橘色，形成互補色對比。
+// 動態規格:
+//   - 場景 3：左側為胸像（頭部中心 x 140, y 82，半徑 28 px），右側為山丘、房子、樹與太陽（x 432, y 54，半徑 15 px）。
+//   - 青綠：天空 #CFE6E3，山丘 #8CC1BE 與 #62A2A1，地面 #3F8083，樹 #2F6A6E，人物 #1D4E53
+//   - 橘：人物受光的邊緣 #FF9248，太陽 #FF8236，太陽光環 #FFC48C
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想做出像電影海報或預告片那樣、色彩對比強烈的畫面時。
+// 標籤: teal and orange, orange and teal, cinematic, color grading, blockbuster, film look
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#117
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 21
+// ティール＆オレンジ: 空と影を青緑、日の当たる肌と太陽を橙に寄せる
+CELLS[20] = cell((k, u) => {
+  const a = env(u);
+  const TO = {
+    sky: '#CFE6E3', sky2: '#B7DAD6', far: '#8CC1BE', mid: '#62A2A1', ground: '#3F8083', ground2: '#2F6A6E', mark: '#CFE6E3', cast: '#2F6A6E',
+    bld: '#A8D1CE', edge: '#4E8E8F', win: '#62A2A1', winOff: '#62A2A1', tree: '#2F6A6E', trunk: '#1F5357', post: '#1F5357', bulb: '#1F5357',
+    person: '#1D4E53', shade: '#143F43', lit: '#FF9248', car: '#2F6A6E', glass: '#CFE6E3', tire: '#143F43', sun: '#FF8236', glow: '#FFC48C'
+  };
+  stageLand(k, pal(BASE, TO, a));
+});

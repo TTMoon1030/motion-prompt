@@ -1,0 +1,39 @@
+// Motion Prompt #067 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#067
+//
+// Mega Menu / Mega menu
+// 包: ui (UI 元件名稱) · element 19 · 分類: 導覽與狀態元件
+// 會發生什麼: 游標移到頁首的「產品」上，滿版面板往下展開，排列三欄連結和一張圖片；游標移開即收合。
+// 動態規格:
+//   - 4.5 秒循環，卡片 542×191。高 42 的頁首，有「產品、價格、支援」（各 16 px，各附向下箭頭）。
+//   - 游標只停留不點擊：1.0 秒抵達「產品」。開啟量 a：1.05–1.3 秒以 easeOutCubic 由 0→1；「產品」變為藍色並加上底線。
+//   - 面板：白色、滿版寬、高 146，在頁首下方從上方 12 px 處往下移到定位，同時以不透明度 a 淡入。陰影 blur 18、向下偏移 8。
+//   - 面板內：間隔 130 px 的三欄（每欄一個藍色標題與三個連結），右側一張 104×112 的圖片。游標往下移，1.75–2.9 秒以淺藍色強調第二欄的第二個連結。
+//   - 收合：游標從 2.9 秒起移出面板；面板在 3.15–3.4 秒以 (1 − easeInOutCubic) 淡出。
+// 使用時機: 在產品或服務眾多的網站上，想用一個選單讓訪客一次看到全部內容時使用。
+// 標籤: mega-menu, megamenu, dropdown-navigation, navigation, header-menu, multi-column
+// 尺寸: 542x191 px · 一輪: 4.5 s
+// Needs: kit ui -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/ui.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#067
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 19
+// 19 メガメニュー（Mega menu）
+CELLS[18] = ui((w, h, t) => {
+  const a = eo(seg(t, 1.05, 1.3)) * (1 - eio(seg(t, 3.15, 3.4)));
+  pageLines(24, 62, 494); fillRR(24, 130, 494, 50, 8, C.block);
+  X.fillStyle = '#fff'; X.fillRect(0, 0, w, 42); X.fillStyle = C.line; X.fillRect(0, 42, w, 1.5);
+  fillRR(24, 14, 70, 16, 4, C.mb);
+  const nav = [['製品', 190], ['料金', 262], ['サポート', 334]];
+  nav.forEach(([s, x], i) => { const on = i === 0 && a > .3; text(s, x, 22, 16, on ? C.blue : '#555', on ? 700 : 600); if (on) fillRR(x, 36, tw(s, 16, 700), 3, 1.5, C.blue); chevron(x + tw(s, 16, 700) + 10, 22, 3.5, 0, on ? C.blue : '#999', 1.8); });
+  if (a > 0) {
+    X.save(); X.globalAlpha = a; X.beginPath(); X.rect(0, 43, w, h); X.clip(); const py = 43 - 12 * (1 - a);
+    shadowed(() => { X.fillStyle = '#fff'; X.fillRect(0, py, w, 146); }, 18, 8, .16);
+    for (let c = 0; c < 3; c++) { const cx = 24 + c * 130; bar(cx, py + 16, 80, C.blue, 10); for (let k = 0; k < 3; k++) { const hov = c === 1 && k === 1 && t > 1.75 && t < 2.9; if (hov) fillRR(cx - 6, py + 34 + k * 26, 112, 22, 5, C.lb); bar(cx, py + 40 + k * 26, [90, 70, 100][(k + c) % 3], hov ? C.sb : C.line2, 9); } }
+    mountains(414, py + 14, 104, 112);
+    X.restore();
+  }
+  // 乗せるだけで開く（クリックしない）
+  pointer([[.3, w + 30, h + 30], [1.0, 205, 26], [1.4, 205, 26], [1.8, 196, 98], [2.9, 196, 98], [3.2, 300, 200], [3.9, w + 30, h + 30]], [], t);
+});

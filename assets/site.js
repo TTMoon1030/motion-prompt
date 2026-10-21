@@ -10,6 +10,65 @@
 
   // ------------------------------------------------------------------ text
   var I18N = {
+    'zh-Hant': {
+      title: 'Motion Prompt｜請 AI 製作時用的「名稱」資料庫',
+      skip: '跳到範例一覽', navLabel: '網站導覽', navHow: '使用方式', navFound: '案例', langLabel: '語言',
+      themeToDark: '切換成深色模式', themeToLight: '切換成淺色模式',
+      eyebrow: '請 AI 製作時用的「名稱」資料庫',
+      h1: '成為<wbr>指揮 AI 的<wbr>創意總監',
+      lead: '收錄 Motion Graphics、運鏡、UI 元件、Landing Page 與網站效果、攝影風格的 {n} 個名稱，每個都附會動的範例。複製提示詞，就能把動態規格和參考實作一起交給 AI。',
+      factMoves: '名稱', factPacks: '包', factLicense: '授權',
+      installSkillH: '用技能安裝',
+      installSkillP: '在終端機執行這行指令。裝好之後，對 AI 說「打開 motion-prompt 的資料庫」，就會開啟這個圖庫。選好之後按「交給 AI」，AI 就會收到。',
+      installPromptH: '用提示詞安裝',
+      installPromptP: '把下面這段文字貼給 Claude Code 或 Codex，AI 會幫你安裝技能並說明用法。',
+      installPrompt: '請閱讀 https://github.com/TTMoon1030/motion-prompt ，把 motion-prompt 技能安裝到這個環境。裝好之後，用三行告訴我怎麼使用。',
+      copy: '複製', copied: '已複製', copyFailed: '無法複製',
+      copyCmdLabel: '複製安裝指令', copyInstallLabel: '複製安裝用的提示詞',
+      galleryH: '範例一覽', packFilterLabel: '依包篩選', catFilterLabel: '依分類篩選',
+      all: '全部', allIn: '這個包的全部',
+      searchLabel: '搜尋範例', searchPh: '用名稱、編號或標籤搜尋',
+      pause: '暫停', play: '播放', pauseLabel: '暫停所有範例', playLabel: '播放所有範例',
+      count: '{n} 個', countOf: '{n} 個（共 {total} 個）',
+      empty: '找不到符合的項目。請換個關鍵字或編號試試。',
+      openLabel: '開啟 #{id} {name} 的詳細資訊', loadFailed: '無法載入',
+      howH: '使用方式',
+      s1h: '請 AI 打開資料庫', s1p: '對安裝了 motion-prompt 技能的 AI 說「打開 motion-prompt 的資料庫」，這個圖庫就會在瀏覽器中開啟。',
+      s2h: '邊看邊選', s2p: '在想用的範例上按「選擇」，要選幾個都可以。選好的項目會排在畫面下方，也可以寫一句備註，例如「用在開頭的標題」。',
+      s3h: '交給 AI，再提出需求', s3p: '按「交給 AI」，選好的項目就會送到 AI 那裡。接著說「把這支影片的開頭改成這種感覺」。這個按鈕只有在 AI 開啟資料庫時才會出現。',
+      skillH: '可以這樣說',
+      skillP: '不用記得名稱或編號。不確定的時候，就像查字典一樣，請 AI 把資料庫打開。',
+      say1: '打開 motion-prompt 的資料庫',
+      say2: '有哪些運鏡？給我看一覽',
+      say3: '（選好交出去之後）把這支影片的開頭改成這種感覺',
+      altH: '沒有技能時，或知道編號時',
+      altP1: '如果 AI 沒有安裝技能，請貼上畫面下方「複製已選項目」產生的文字，裡面有範例和規格的網址。只要一個的話，也可以用詳細頁裡的「複製提示詞」。',
+      altP2: '如果知道編號，也可以直接說：「用 motion-prompt 的 #012 和 #045」。',
+      implH: '關於參考實作',
+      implP: '所有範例都是用 Canvas 2D 寫成、畫面只由時間決定的函式，沒有使用外部函式庫。因為可以一格一格畫，也能用來輸出影片。',
+      author: '作者', authorName: '大滝昇平 Shohei Ohtaki',
+      thanks1: '把會動的範例排在一起、複製提示詞來使用的形式，靈感來自', thanks2: '，在此致謝。',
+      whyLink: '為什麼做這個', makeLink: '用自己的領域、自己的語言製作', addLink: '加入你所在領域的名稱', listLink: '名稱一覽（GitHub）',
+      removeP1: '如需刪除或更正收錄內容，請使用', removeLink: 'GitHub 的 Issue 表單', removeP2: '提出。確認後會盡快處理。',
+      dAsk: '對 AI 的說法範例',
+      ownP: '這裡收錄的只是範例。你也可以用自己的領域、自己的語言，做出同樣的名稱範例。', ownLink: '做法與提示詞（make-your-own）',
+      dSpec: '動態規格', dUse: '使用時機', tagsLabel: '標籤', promptLabel: '會被複製的提示詞',
+      copyPrompt: '複製提示詞', copyCode: '複製程式碼', showCode: '查看程式碼',
+      prev: '上一個名稱', next: '下一個名稱', close: '關閉',
+      kitLink: '共用輔助程式碼（kit/{pack}.js）', txtLink: '附規格的程式碼（{id}.txt）',
+      codeLoading: '載入中…', codeFailed: '無法載入程式碼。',
+      size: '{w}×{h} px・一輪 {c} 秒',
+      pick: '選擇', picked: '已選擇', pickLabel: '選擇 #{id} {name}', unpickLabel: '移除 #{id} {name}',
+      trayCount: '已選 {n} 個', trayWait: 'AI 正在等待。選好後請按「交給 AI」。',
+      trayEmpty: '在範例上按「選擇」，就會排在這裡。',
+      noteLabel: '備註（選填）', notePh: '例如：用在開頭的標題',
+      send: '交給 AI', sending: '正在交給 AI…', copyPicked: '複製已選項目', shareUrl: '分享這組選擇的網址', clearAll: '全部移除',
+      pickedLive: '已選擇 #{id} {name}，目前共選了 {n} 個。', unpickedLive: '已移除 #{id} {name}，目前共選了 {n} 個。',
+      clearedLive: '已移除所有選擇。',
+      outIntro: '我在 motion-prompt 的圖庫選了以下 {n} 個項目，請用它們來編輯。',
+      outDemo: '範例', outSpec: '規格與程式碼', outNote: '備註',
+      outEnd: '完整規格可以用 motion-prompt 技能的 get 指令取得（如果沒有安裝技能，請讀取每一項「規格與程式碼」的網址）。',
+    },
     ja: {
       title: 'Motion Prompt｜AIに頼むための「名前」のライブラリ',
       skip: '見本の一覧へ移動', navLabel: 'サイト内', navHow: '使い方', navFound: '事例', langLabel: '言語',
@@ -22,7 +81,7 @@
       installSkillP: 'ターミナルで実行します。入れたあとは、AIに「motion-prompt のライブラリ出して」と頼むと、このギャラリーが開きます。選んで「AIに渡す」を押すと、AIに届きます。',
       installPromptH: 'プロンプトで導入',
       installPromptP: '下の文を Claude Code や Codex に貼ると、AIがスキルを入れて使い方を教えてくれます。',
-      installPrompt: 'https://github.com/showheyohtaki/motion-prompt を読んで、motion-prompt スキルをこの環境に入れてください。入れたら、使い方を3行で教えてください。',
+      installPrompt: 'https://github.com/TTMoon1030/motion-prompt を読んで、motion-prompt スキルをこの環境に入れてください。入れたら、使い方を3行で教えてください。',
       copy: 'コピー', copied: 'コピーしました', copyFailed: 'コピーできませんでした',
       copyCmdLabel: '導入コマンドをコピー', copyInstallLabel: '導入用のプロンプトをコピー',
       galleryH: '見本の一覧', packFilterLabel: 'パックで絞り込む', catFilterLabel: 'カテゴリで絞り込む',
@@ -81,7 +140,7 @@
       installSkillP: 'Run this in a terminal. After that, say "open the motion-prompt library" to your AI and this gallery opens. Pick what you want and press "Send to AI".',
       installPromptH: 'Install with a prompt',
       installPromptP: 'Paste the text below into Claude Code or Codex. The AI installs the skill and tells you how to use it.',
-      installPrompt: 'Read https://github.com/showheyohtaki/motion-prompt and install the motion-prompt skill in this environment. When it is installed, tell me how to use it in three lines.',
+      installPrompt: 'Read https://github.com/TTMoon1030/motion-prompt and install the motion-prompt skill in this environment. When it is installed, tell me how to use it in three lines.',
       copy: 'Copy', copied: 'Copied', copyFailed: 'Could not copy',
       copyCmdLabel: 'Copy the install command', copyInstallLabel: 'Copy the install prompt',
       galleryH: 'Gallery', packFilterLabel: 'Filter by pack', catFilterLabel: 'Filter by category',
@@ -138,7 +197,7 @@
   var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
   var darkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : { matches: false };
   var state = {
-    lang: root.lang === 'en' ? 'en' : 'ja',
+    lang: I18N[root.lang] ? root.lang : 'zh-Hant',
     pack: 'all', cat: 'all', q: '',
     playing: !reduceMotion.matches,
     open: null,           // id shown in the detail view
@@ -153,13 +212,15 @@
 
   function t(key, vars) {
     var s = I18N[state.lang][key];
-    if (s == null) s = I18N.ja[key] || key;
+    if (s == null) s = I18N['zh-Hant'][key] || key;
     if (vars) Object.keys(vars).forEach(function (k) { s = s.split('{' + k + '}').join(vars[k]); });
     return s;
   }
-  function names(el) {
-    var ja = state.lang === 'ja';
-    return { main: ja ? el.name.ja : el.name.en, sub: ja ? el.name.en : el.name.ja };
+  function names(el) { // the second name is English (Japanese for English); none when the Chinese name is the English term
+    var lang = state.lang, main = el.name[lang] || el.name.en;
+    var sub = lang === 'en' ? el.name.ja : el.name.en;
+    if (lang === 'zh-Hant' && sub === main) sub = '';
+    return { main: main, sub: sub };
   }
   function h(tag, attrs, kids) {
     var n = document.createElement(tag);
@@ -311,8 +372,9 @@
   function haystack(el) {
     var p = packBy[el.pack];
     var c = p.categories.filter(function (x) { return x.slug === el.category; })[0] || {};
-    return ['#' + el.id, el.id, String(+el.id), el.slug, el.pack, el.name.ja, el.name.en, el.meaning ? el.meaning.ja + ' ' + el.meaning.en : '', el.summary.ja, el.summary.en,
-      el.tags.join(' '), p.title.ja, p.title.en, c.ja || '', c.en || ''].join(' ').toLowerCase();
+    var all = function (o) { return o ? Object.keys(o).map(function (k) { return o[k]; }).join(' ') : ''; };
+    return ['#' + el.id, el.id, String(+el.id), el.slug, el.pack, all(el.name), all(el.meaning), all(el.summary),
+      el.tags.join(' '), all(p.title), c.ja || '', c.en || '', c['zh-Hant'] || ''].join(' ').toLowerCase();
   }
   function matches(el) {
     if (state.pack !== 'all' && el.pack !== state.pack) return false;
@@ -444,7 +506,7 @@
     $('#d-id').textContent = '#' + el.id;
     $('#d-where').textContent = p.title[lang] + (c ? ' / ' + c[lang] : '');
     $('#d-name').textContent = nm.main;
-    $('#d-sub').textContent = nm.sub + ' · ' + t('size', { w: el.width, h: el.height, c: el.cycle });
+    $('#d-sub').textContent = (nm.sub ? nm.sub + ' · ' : '') + t('size', { w: el.width, h: el.height, c: el.cycle });
     var mean = $('#d-meaning'), ask = $('#d-ask'), askH = $('#d-ask-h');
     mean.textContent = el.meaning ? el.meaning[lang] || el.meaning.en || '' : ''; mean.hidden = !mean.textContent;
     ask.textContent = el.ask ? el.ask[lang] || el.ask.en || '' : ''; ask.hidden = askH.hidden = !ask.textContent;
@@ -454,7 +516,7 @@
     $('#d-use').textContent = el.use[lang];
     var tags = $('#d-tags'); tags.textContent = '';
     el.tags.forEach(function (s) { tags.appendChild(h('li', { text: s })); });
-    $('#d-prompt').textContent = PROMPT(el, p.title[lang], lang);
+    $('#d-prompt').textContent = PROMPT(el, p.title[lang], lang, SITE);
     var kit = $('#d-kit'), txt = $('#d-txt');
     kit.href = 'api/v1/kit/' + el.pack + '.js'; kit.textContent = t('kitLink', { pack: el.pack });
     txt.href = 'api/v1/' + lang + '/e/' + el.id + '.txt'; txt.textContent = t('txtLink', { id: el.id });
@@ -548,7 +610,7 @@
   // ------------------------------------------------------------------ picks (choose → copy, share, or send to the waiting agent)
   // The "pick" command of the skill opens this page with ?cb=http://127.0.0.1:<port>/?t=<token>. "Send to AI" then
   // navigates the whole tab there (a top-level GET, not fetch: an https page may not fetch from 127.0.0.1).
-  var SITE = CAT.site || 'https://showheyohtaki.github.io/motion-prompt/';
+  var SITE = CAT.site || 'https://ttmoon1030.github.io/motion-prompt/';
   var PICK_KEY = 'mp-pick', PICK_CB_KEY = 'mp-pick-cb', NOTE_MAX = 300;
   var CHECK_SVG = '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.4l3 3 6-6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var X_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
@@ -666,7 +728,7 @@
     var lang = state.lang, lines = [t('outIntro', { n: state.picks.length }), ''];
     state.picks.forEach(function (id, i) {
       var nm = names(elBy[id]);
-      var sub = nm.sub && nm.sub !== nm.main ? (lang === 'ja' ? '（' + nm.sub + '）' : ' (' + nm.sub + ')') : '';
+      var sub = nm.sub && nm.sub !== nm.main ? (lang === 'en' ? ' (' + nm.sub + ')' : '（' + nm.sub + '）') : '';
       lines.push((i + 1) + '. #' + id + ' ' + nm.main + sub);
       lines.push('   ' + t('outDemo') + ': ' + SITE + '#' + id);
       lines.push('   ' + t('outSpec') + ': ' + SITE + 'api/v1/' + lang + '/e/' + id + '.txt');
@@ -725,7 +787,8 @@
     $('#fact-count').textContent = CAT.count;
     $('#fact-packs').textContent = CAT.packs.length;
     $('#tsv-link').href = 'api/v1/' + lang + '/catalog.tsv';
-    $$('[data-href-' + lang + ']').forEach(function (a) { a.href = a.getAttribute('data-href-' + lang); });
+    var hrefAttr = 'data-href-' + lang.toLowerCase();
+    $$('[' + hrefAttr + ']').forEach(function (a) { a.href = a.getAttribute(hrefAttr); });
     $('#d-prev').setAttribute('aria-label', t('prev'));
     $('#d-next').setAttribute('aria-label', t('next'));
     $('#d-close').setAttribute('aria-label', t('close'));

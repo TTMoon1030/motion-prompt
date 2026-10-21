@@ -1,0 +1,42 @@
+// Motion Prompt #075 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#075
+//
+// Sticky Header / Sticky header
+// 包: lp (Landing Page 與網站效果) · element 03 · 分類: 捲動時的效果
+// 會發生什麼: 最上方的公告列會捲出畫面，但下面的 Header 到了畫面頂端就停住，內容從它下方捲過。
+// 動態規格:
+//   - 捲動量：0.4–1.3 秒 0→110 px，1.9–2.8 秒 110→250 px，3.4–4.4 秒 250→0（三次方 easeInOut）。
+//   - 頁面最上方是高 22 px 的公告列（深藍色），下方是高 34 px 的 Header（Logo、三個選單項目、按鈕）。
+//   - Header 位置 = max(22 − 捲動量, 0)：公告列消失後，Header 停在頂端（position: sticky; top: 0）。
+//   - 停住後再捲動 24 px 的過程中，Header 下方 12 px 的陰影不透明度從 0 增加到 0.16。
+//   - 內容（照片、標題、三張卡片）照一般方式在 Header 下方捲動。
+// 使用時機: 想讓長頁面中的選單與 CTA 按鈕隨時都按得到時。
+// 標籤: sticky, sticky-header, fixed-header, position-sticky, navigation, header, scroll
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#075
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 03
+// 03 追従ヘッダー（スクロールすると、ヘッダーが画面の上で止まってついてくる）
+CELLS[2] = (k, w, h, u) => {
+  frame(k);
+  const y = steps([[0.4, 0], [1.3, 110], [1.9, 110], [2.8, 250], [3.4, 250], [4.4, 0]], u);
+  const STRIP = 22;
+  view(k, () => {
+    k.save(); k.translate(0, -y);
+    pic(k, 24, 70, 214, 112, 0, 8);
+    txt(k, '新しい毎日を、', 262, 104, `800 22px ${JP}`, C.ink); bars(k, 262, 120, 210, 3); btn(k, 262, 160, 100, 26, '詳しく見る');
+    k.fillStyle = C.soft; k.fillRect(0, 212, VW, 240);
+    txt(k, '特長', VW / 2, 246, `800 18px ${JP}`, C.ink, 'center');
+    for (let i = 0; i < 3; i++) { const x = 34 + i * 152; k.fillStyle = '#fff'; rr(k, x, 262, 136, 120, 8); k.fill(); pic(k, x + 8, 270, 120, 58, i, 5); bars(k, x + 10, 340, 110, 3, C.faint, 6, 11); }
+    k.fillStyle = C.ink; k.fillRect(0, 0, VW, STRIP);
+    txt(k, '期間限定キャンペーン実施中', VW / 2, STRIP / 2 + 0.5, `600 11px ${JP}`, '#fff', 'center', 'middle');
+    k.restore();
+    const hy = Math.max(STRIP - y, 0), sh = clamp((y - STRIP) / 24);
+    if (sh > 0) { const g = k.createLinearGradient(0, hy + 34, 0, hy + 46); g.addColorStop(0, `rgba(28,35,51,${0.16 * sh})`); g.addColorStop(1, 'rgba(28,35,51,0)'); k.fillStyle = g; k.fillRect(0, hy + 34, VW, 12); }
+    header(k, hy);
+    sbar(k, y / 250, 0.42);
+  });
+};

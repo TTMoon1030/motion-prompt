@@ -1,0 +1,37 @@
+// Motion Prompt #134 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#134
+//
+// Repeater
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 14 · 分類: 文字與圖形效果
+// 會發生什麼: 一個圖形被複製排成圓環，各個複本略微錯開地旋轉、脈動。
+// 動態規格:
+//   - 圓角長條（24 × 60，圓角 12）沿中央半徑 58 的圓複製，最多 12 個，每個轉成朝外（角度 + 90°）。
+//   - 數量：0.35–1.7 秒 1→12，3.6–4.45 秒 12→1（easeInOut，二次）。每個新複本從前一個位置滑到自己的位置，即往前 30°（easeOut，三次）。
+//   - 整個圓環每 4.7 秒轉一圈。每個複本的大小在 1 ± 0.22 之間脈動，每 4.7 秒 2 次，每個比前一個晚 0.55 rad，形成繞著圓環跑的波紋。
+//   - 顏色依序為藍色、珊瑚色、黃色、薄荷綠。原本那一個有白色描邊。右上角有「×N」計數。
+// 使用時機: 用在載入動畫、背景圖樣、花朵或放射光線等由同一個形狀重複組成的東西。
+// 標籤: repeater, duplicate, radial, array, clone, pattern, loader
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#134
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 14
+// 14 リピーター（1つの図形が複製されて円に並び、少しずつずれながら回る）
+CELLS[13] = (k, w, h, u) => {
+  u = snapU(u);
+  stage(k);
+  const N = 12, X = w / 2, Y = h / 2, R = 58, spin = 2 * Math.PI * u / CYC;
+  const cnt = 1 + (N - 1) * (eIOs(P(u, 0.35, 1.7)) - eIOs(P(u, 3.6, 4.45)));
+  for (let i = N - 1; i >= 0; i--) {
+    const vis = i === 0 ? 1 : clamp(cnt - i); if (vis <= 0) continue;
+    const ang = spin + (i === 0 ? 0 : (i - 1 + eOut(vis))) * 2 * Math.PI / N;
+    const pul = (1 + 0.22 * Math.sin(2 * Math.PI * 2 * u / CYC - i * 0.55)) * (0.55 + 0.45 * vis);
+    k.save(); k.translate(X + Math.cos(ang) * R, Y + Math.sin(ang) * R); k.rotate(ang + Math.PI / 2); k.scale(pul, pul);
+    k.fillStyle = PAL[i % 4]; rr(k, -12, -30, 24, 60, 12); k.fill();
+    if (i === 0) { k.strokeStyle = '#fff'; k.lineWidth = 4; rr(k, -12, -30, 24, 60, 12); k.stroke(); }
+    k.restore();
+  }
+  txt(k, '×' + Math.round(cnt), w - 34, 46, `800 40px ${DISP}`, C.yel, 'right', 'middle');
+};

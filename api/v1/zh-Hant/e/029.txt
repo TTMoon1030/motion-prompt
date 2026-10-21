@@ -1,0 +1,28 @@
+// Motion Prompt #029 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#029
+//
+// 跟拍 / Tracking shot
+// 包: camera (運鏡與轉場) · element 05 · 分類: 鏡頭運動
+// 會發生什麼: 攝影機以與步行人物相同的速度橫向並行；人物保持在畫面中央，越靠近的木樁往後掠過得越快。
+// 動態規格:
+//   - 攝影機：以等速 1.7 m/s 往右橫移（x = -4.0 m → +4.0 m，歷時 4.7 秒）；高度 1.3 m，朝正前方；無緩動
+//   - 被攝體：人物在與攝影機相同的 x 位置上行走（距離 7.5 m），始終在畫面中央；腿和手臂以 sin(u×7)×0.42 rad 擺動
+//   - 視差：縱深 4 m、每隔 1.6 m 一根的木樁往左掠過最快，其次是樹，再來是建築（48 m 外）；山幾乎不動
+//   - 右上角顯示「→ 1.7m/s」
+//   - 循環：每 4.7 秒跳回起點（木樁與地面格線在接縫處對齊；背景的建築與樹位置會跳動）
+// 使用時機: 跟著走路或跑步的被攝體，在保留移動感的同時呈現其動作時。
+// 標籤: tracking, tracking shot, follow, truck, lateral, sideways, parallax, walk
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#029
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 05
+// 05 トラッキング: 人物と並んで横移動（手前ほど速く流れる）
+CELLS[4] = shot((k, w, h, u) => {
+  const x = (u - CYC / 2) * 1.7;
+  const fgp = []; for (let i = -12; i <= 12; i++) fgp.push([i * 1.6, 4]);
+  world(k, w, h, cam({ x, y: 1.3 }), { person: { x, z: 7.5, walk: u * 7 }, fg: fgp });
+  return '→ 1.7m/s';
+});

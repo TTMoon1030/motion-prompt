@@ -1,0 +1,39 @@
+// Motion Prompt #055 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#055
+//
+// Popover
+// 包: ui (UI 元件名稱) · element 07 · 分類: 展開與彈出式元件
+// 會發生什麼: 點擊「詳情」後，右側出現一個以三角形指向按鈕的白色小面板；點擊面板內的「OK」即關閉。
+// 動態規格:
+//   - 4.5 秒循環，卡片 542×191。藍色外框的「詳情」按鈕（108×36）位於 (24, 112)；游標在 1.0 秒點擊。
+//   - 顯示量 a：1.0–1.28 秒以 easeOutCubic 由 0→1；不透明度 a，從右側 6 px 處滑入定位。
+//   - 面板：白色 300×120、圓角 10，位於 (156, 62)，1 px 邊框，陰影 blur 22、向下偏移 6。左緣 y 122–138 處有寬 10 的三角形指向按鈕。
+//   - 面板內：一條粗的標題線、兩行內文，下方一個 70×26 的外框按鈕和一個 72×26 的藍色「OK」按鈕。
+//   - 關閉：游標在 3.0 秒移到「OK」(402, 157)，3.3 秒點擊；a 乘上 (1 − easeInOutCubic(3.3–3.5 秒))。
+// 使用時機: 想在開啟它的按鈕旁就地完成簡短設定或確認時使用。
+// 標籤: popover, popup, callout, bubble, flyout, overlay
+// 尺寸: 542x191 px · 一輪: 4.5 s
+// Needs: kit ui -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/ui.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#055
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 07
+// 07 ポップオーバー（Popover）
+CELLS[6] = ui((w, h, t) => {
+  pageLines(24, 16, 494);
+  strokeRR(24, 112, 108, 36, 8, C.blue, 2); text('詳細', 78, 130, 15, C.blue, 600, 'center');
+  fillRR(24, 160, 494, 22, 6, C.block);
+  const a = eo(seg(t, 1.0, 1.28)) * (1 - eio(seg(t, 3.3, 3.5)));
+  if (a > 0) {
+    X.save(); X.globalAlpha = a; X.translate(6 * (1 - a), 0);
+    const px = 156, py = 62, pw = 300, ph = 120;
+    shadowed(() => { fillRR(px, py, pw, ph, 10, '#fff'); }, 22, 6, .2); strokeRR(px, py, pw, ph, 10, C.border, 1);
+    X.beginPath(); X.moveTo(px + 1, 122); X.lineTo(px - 10, 130); X.lineTo(px + 1, 138); X.fillStyle = '#fff'; X.fill();
+    X.beginPath(); X.moveTo(px, 122); X.lineTo(px - 10, 130); X.lineTo(px, 138); X.strokeStyle = C.border; X.lineWidth = 1; X.stroke();
+    bar(px + 18, py + 18, 130, C.ink, 11); bar(px + 18, py + 42, 250); bar(px + 18, py + 60, 200);
+    strokeRR(px + 130, py + 82, 70, 26, 6, C.line2, 1.5); fillRR(px + 210, py + 82, 72, 26, 6, C.blue); text('OK', px + 246, py + 95, 14, '#fff', 700, 'center', NUMF);
+    X.restore();
+  }
+  pointer([[.3, w + 30, h + 30], [.95, 84, 134], [1.6, 84, 134], [3.0, 402, 157], [3.5, 402, 157], [4.2, w + 30, h + 30]], [1.0, 3.3], t);
+});

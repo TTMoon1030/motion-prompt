@@ -1,7 +1,7 @@
-// Motion Prompt #049-072 · MIT License (c) 2026 Shohei Ohtaki · https://showheyohtaki.github.io/motion-prompt/#049
+// Motion Prompt #049-072 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#049
 //
-// Kit for pack "ui" (UI component names / UIパーツの名前): the constants and helpers its elements share.
-// Elements #049-072 · 542x191 px · cycle 4.5 s. Element code: https://showheyohtaki.github.io/motion-prompt/api/v1/en/e/<id>.txt (or /ja/).
+// Kit for pack "ui" (UI component names / UI 元件名稱 / UIパーツの名前): the constants and helpers its elements share.
+// Elements #049-072 · 542x191 px · cycle 4.5 s. Element code: https://ttmoon1030.github.io/motion-prompt/api/v1/zh-Hant/e/<id>.txt (or /ja/, /en/).
 //
 // Run one element standalone in a browser:
 //   1. paste this file into a <script>,

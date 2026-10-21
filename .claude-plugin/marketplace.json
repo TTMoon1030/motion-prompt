@@ -1,6 +1,6 @@
 {
   "name": "motion-prompt",
-  "description": "Marketplace for the Motion Prompt skill (gallery: showheyohtaki.github.io/motion-prompt)",
+  "description": "Motion Prompt 技能（繁體中文版）的 marketplace（圖庫：ttmoon1030.github.io/motion-prompt）",
   "owner": {
     "name": "Shohei Ohtaki",
     "url": "https://x.com/showheyohtaki"
@@ -9,7 +9,7 @@
     {
       "name": "motion-prompt",
       "source": "./",
-      "description": "A library of names to use with AI (motion-graphics moves, camera moves and transitions, UI components, landing-page and web effects, photo looks and lighting), each with a moving sample. Ask the agent to open the library, pick in the browser, and it applies your picks to your video, web or image project with the published timings and easing.",
+      "description": "請 AI 用的名稱資料庫（Motion Graphics 動態手法、運鏡與轉場、UI 元件、Landing Page 與網站效果、攝影的打光與風格），每個都附會動的範例。請 AI 打開資料庫、在瀏覽器裡挑選，它就會照公開的時間與緩動數值，把你挑的效果套進影片、網頁或圖片專案。繁體中文版。",
       "category": "design"
     }
   ]

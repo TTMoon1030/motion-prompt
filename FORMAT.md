@@ -133,15 +133,16 @@ A field without the new language shows its English text in that list. The headin
 list ("Name", "What it is", …) are English unless you add a block for the language to `DOC` in
 `tools/build.mjs`; add its display name to `LANG_NAME` there too.
 
-The gallery, `api/v1/<lang>/` and the copyable prompt are served in `ja` and `en` only (`LANGS` in
-`tools/build.mjs`). In those, a pack with no Japanese shows its English text. Other languages are
-carried in `api/v1/catalog.json` and shown in the generated lists.
+The gallery, `api/v1/<lang>/` and the copyable prompt are served in `zh-Hant`, `ja` and `en` (`LANGS` in
+`tools/build.mjs`; this Traditional Chinese edition makes `zh-Hant` the default of the gallery and the CLI).
+In those, a pack without one of these languages shows its English text. Other languages are carried in
+`api/v1/catalog.json` and shown in the generated lists.
 
 ## Generated API (tools/build.mjs writes these; the skill CLI and the site read them)
 
 ```
 api/v1/catalog.json                 { version, count, packs:[…], elements:[{ id, pack, no, slug, category, width, height, cycle, name, meaning, ask, summary, spec, use, tags }] }
-api/v1/<lang>/catalog.tsv           header comment line, then: id  pack  category  title  tags  summary      (lang = ja | en)
+api/v1/<lang>/catalog.tsv           header comment line, then: id  pack  category  title  tags  summary      (lang = zh-Hant | ja | en)
 api/v1/<lang>/e/<id>.txt            one element: license line, info header (name, what it shows, spec, use, size, cycle, "Needs: kit <pack>", live demo URL), then the element code block
 api/v1/<lang>/p/<id>.txt            the copy-paste prompt for that element (same text the site's "copy prompt" button copies)
 api/v1/kit/<pack>.js                @kit + all @shared blocks of the pack, plus a short header showing how to run one element standalone
@@ -155,7 +156,7 @@ Live demo deep link: `https://showheyohtaki.github.io/motion-prompt/#<id>`.
 ## Tooling
 
 - `node tools/build.mjs` regenerates `api/v1/`, `assets/catalog.js` and the name lists (`packs/README.md`,
-  `packs/<pack>/README*.md`). `--check` validates without writing. If `assets/preview-<pack>.gif` exists,
+  `packs/README.zh-Hant.md`, `packs/<pack>/README*.md`). `--check` validates without writing. If `assets/preview-<pack>.gif` exists,
   the pack's lists show it.
 - `node tools/check.mjs` draws every element at several times and reports exceptions, blank frames and loop seams.
   It needs Playwright available to Node (it is not a dependency of this repo).

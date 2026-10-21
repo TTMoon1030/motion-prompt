@@ -1,0 +1,15 @@
+請使用「閱讀進度條」（Scroll progress bar），這是「Landing Page 與網站效果」裡的一個名稱。
+Motion Prompt #079
+
+它是什麼：用最上方的線條顯示閱讀進度
+範例中會發生的事：文章一點一點往下讀時，頂端的線條從左邊延伸，捲到頁面底部時到達另一端。
+規格：
+- 文章頁捲動 0→430 px，分四段、每段 110 px，每段移動 0.45 秒後停 0.4 秒（三次方 easeInOut）。
+- 3.75–4.55 秒內由 430→0 捲回原位。
+- 視窗頂端一條高 6 px 的進度條：底軌為淺灰色，填色為橘紅色。
+- 填色寬度 = 511 px × 捲動量 / 430，即捲動比例本身（等同 CSS 的 animation-timeline: scroll()）。
+使用時機：想在長篇文章中讓讀者知道還剩多少沒讀時。
+
+參考實作（Canvas 2D，一個畫面只由時間決定的函式）：https://ttmoon1030.github.io/motion-prompt/api/v1/zh-Hant/e/079.txt
+共用輔助程式碼：https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+請完全保留參考實作的形狀、時間點與緩動（easing）數值，只把裡面的文字、顏色和素材換成符合我正在製作的內容。

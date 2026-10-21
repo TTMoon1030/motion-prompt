@@ -1,0 +1,45 @@
+// Motion Prompt #105 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#105
+//
+// 散景 / Bokeh
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 09 · 分類: 鏡頭與相機效果
+// 會發生什麼: 光圈逐漸開大，對焦的人物維持清晰，後方建築變模糊，路燈與遠處燈光擴散成大而淡的圓形光斑。
+// 動態規格:
+//   - 場景 2：街角。後方是一排建築、樹與路燈（x 114, 292, 494），道路在 y 132–162，人物站在左前方（腳底 x 176, y 200，身高 124 px）。背景轉為暗一階的場景（天空 #E7E5E1）
+//   - 背景模糊（人物以外的全部）：0 → 6 px
+//   - 燈光：3 盞路燈（大小 1.25）與另外 12 顆間隔 45 px 的燈（y 44–114，大小 0.6–1.2，固定亂數種子）；光斑半徑 = (2.4 + 15 × 效果量) × 大小
+//   - 光斑：不透明度 100% → 55%，路燈為琥珀色 #FFC75A，遠處燈光為 #FFE3A3，邊緣有 1.2 px 的琥珀色線
+//   - 人物維持清晰；右上光圈 f/16 → f/1.4（8 級）
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想讓人物或商品從背景中浮出來，並營造柔和、帶節慶感的夜晚氛圍時。
+// 標籤: bokeh, shallow depth of field, background blur, wide aperture, f/1.4, out of focus, lights
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#105
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 09
+// ボケ: 絞りを開けると、人物はくっきりのまま、背景の灯りが大きな丸になってにじむ
+CELLS[8] = cell((k, u) => {
+  const a = env(u), p = pal(BASE, DIM, a);
+  const [B, kb] = layer('bokeh'); stageStreet(kb, p, { person: false });
+  const [Bb, kbb] = layer('bokeh-b'); kbb.filter = `blur(${(6 * a).toFixed(2)}px)`; kbb.drawImage(B, 0, 0); kbb.filter = 'none';
+  k.drawImage(B, 0, 0); k.drawImage(Bb, 0, 0);
+  // 灯り: 街灯3つと、窓や遠くの灯り12個（横に45pxおき・高さと大きさは固定シード）。絞りを開くほど丸が大きく薄くなる
+  const pts = once('bokeh-pts', () => {
+    const o = LAMPS.map(x => [x + 9, ROAD - 53, 1.25, 0]), r = rng(9);
+    for (let i = 0; i < 12; i++) o.push([22 + i * 45 + r() * 20, 44 + r() * 70, 0.6 + r() * 0.6, 1]);
+    return o;
+  });
+  k.save();
+  for (const [x, y, s, w] of pts) {
+    const r = (2.4 + 15 * a) * s;
+    k.globalAlpha = lerp(1, 0.55, a); k.fillStyle = w ? BASE.glow : BASE.lit; k.beginPath(); k.arc(x, y, r, 0, TAU); k.fill();
+    k.globalAlpha = 0.7 * a; k.strokeStyle = BASE.lit; k.lineWidth = 1.2; k.stroke();
+  }
+  k.restore();
+  figure(pen(k), FIG[0], FIG[1], FIG[2], p.person);
+  const stops = ['f/16', 'f/11', 'f/8', 'f/5.6', 'f/4', 'f/2.8', 'f/2', 'f/1.4'];
+  hud(k, stops[Math.round(a * 7)]);
+});

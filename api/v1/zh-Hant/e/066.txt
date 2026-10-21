@@ -1,0 +1,37 @@
+// Motion Prompt #066 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#066
+//
+// 麵包屑 / Breadcrumbs
+// 包: ui (UI 元件名稱) · element 18 · 分類: 導覽與狀態元件
+// 會發生什麼: 點擊麵包屑中的「課程」回到上一層的列表頁；再點擊列表中的卡片，回到原本的詳細頁。
+// 動態規格:
+//   - 4.5 秒循環，卡片 542×191。上方為「首頁 › 課程 › 網頁設計」（17 px）：連結為藍色，目前頁面為黑色粗體；y 46 有一條分隔線。
+//   - 游標移到「課程」上（0.9–1.2 秒出現底線），1.0 秒點擊。
+//   - 返回上層量 up：1.0–1.25 秒以 easeInOutCubic 由 0→1。「› 網頁設計」淡出，「課程」變為目前頁面（黑色粗體）。
+//   - 內容：以不透明度交叉淡入淡出，由詳細頁（標題與內文）切換為三張卡片（158×118，附山景圖）的列表。
+//   - 返回：游標移到第一張卡片上（2.45–2.8 秒出現藍色外框），2.7 秒點擊；2.7–2.95 秒回到原本的詳細頁。
+// 使用時機: 在階層較深的網站上，想顯示目前位置並提供回到上層的路徑時使用。
+// 標籤: breadcrumbs, breadcrumb, trail, hierarchy, navigation, path
+// 尺寸: 542x191 px · 一輪: 4.5 s
+// Needs: kit ui -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/ui.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#066
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 18
+// 18 パンくずリスト（Breadcrumbs）
+CELLS[17] = ui((w, h, t) => {
+  const up = eio(seg(t, 1.0, 1.25)) * (1 - eio(seg(t, 2.7, 2.95))); // 1=「講座」の階層にいる
+  let x = 24; const y = 24;
+  text('ホーム', x, y, 17, C.blue, 600); x += tw('ホーム', 17, 600) + 10; text('›', x, y, 17, '#aaa', 500); x += 18;
+  const kx = x, kw = tw('講座', 17, 700);
+  const hoverK = t > .9 && t < 1.2;
+  text('講座', x, y, 17, up > .5 ? C.ink : C.blue, up > .5 ? 700 : 600); if (hoverK) { X.fillStyle = C.blue; X.fillRect(x, y + 12, kw, 2); }
+  x += kw + 10;
+  X.globalAlpha = 1 - up; text('›', x, y, 17, '#aaa', 500); text('Web制作', x + 18, y, 17, C.ink, 700); X.globalAlpha = 1;
+  X.fillStyle = C.line; X.fillRect(24, 46, 494, 1.5);
+  // 中身：詳細ページ ⇄ 一覧ページ
+  if (up < 1) { X.save(); X.globalAlpha = 1 - up; bar(24, 64, 200, C.ink, 13); bar(24, 92, 494); bar(24, 110, 420); fillRR(24, 132, 494, 48, 8, C.block); X.restore(); }
+  if (up > 0) { X.save(); X.globalAlpha = up; for (let k = 0; k < 3; k++) { const cx = 24 + k * 168, hov = k === 0 && t > 2.45 && t < 2.8; strokeRR(cx, 62, 158, 118, 8, hov ? C.blue : C.line2, hov ? 2 : 1.5); mountains(cx + 10, 72, 138, 58, k % 2); bar(cx + 10, 142, 90, k === 0 ? C.sb : C.line2, 10); bar(cx + 10, 160, 120, C.line, 7); } X.restore(); }
+  pointer([[.3, w + 30, h + 30], [.95, kx + kw / 2, 30], [1.6, kx + kw / 2, 30], [2.4, 104, 120], [3.1, 104, 120], [3.9, w + 30, h + 30]], [1.0, 2.7], t);
+});

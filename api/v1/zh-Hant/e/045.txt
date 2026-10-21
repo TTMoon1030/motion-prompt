@@ -1,0 +1,29 @@
+// Motion Prompt #045 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#045
+//
+// 擦除轉場 / Wipe
+// 包: camera (運鏡與轉場) · element 21 · 分類: 轉場
+// 會發生什麼: 一條垂直邊界由左往右移動，邊界掃過的地方換成下一個畫面。
+// 動態規格:
+//   - 銜接：1.1 秒，從 1.7 秒到 2.8 秒；邊界從左緣外側（x = -4 px）移動到右緣外側（x = 543 px）
+//   - 緩動：三次緩入緩出（相當於 cubic-bezier(0.65,0,0.35,1)）
+//   - 邊界左側顯示下一個畫面，右側顯示前一個畫面；兩個畫面都不移動（是裁切露出，不是推移）
+//   - 邊界：寬 4 px 的藍色垂直線，只在移動期間顯示
+//   - 攝影機：兩個畫面都固定；被攝體也不動
+//   - 每 4.7 秒交替進行 A→B 與 B→A（來回一次 9.4 秒）；右上角顯示「A → B」/「B → A」
+// 使用時機: 要清楚標示場景或話題的轉換，或切換比較的前後兩邊時。
+// 標籤: wipe, linear wipe, reveal, clip, edge, left to right, transition
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#045
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 21
+// 21 ワイプ
+CELLS[20] = shot(abCell((k, w, h, u, A, B) => {
+  const p = eIO(P(u, 1.7, 2.8)), ex = p * (w + 8) - 4;
+  A(k, w, h);
+  if (p > 0) { k.save(); k.beginPath(); k.rect(0, 0, ex, h); k.clip(); k.fillStyle = '#fff'; k.fillRect(0, 0, w, h); B(k, w, h); k.restore(); }
+  if (p > 0 && p < 1) { k.fillStyle = C.blue; k.fillRect(ex - 2, 0, 4, h); }
+}));

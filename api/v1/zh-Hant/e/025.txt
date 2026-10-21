@@ -1,0 +1,25 @@
+// Motion Prompt #025 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#025
+//
+// 橫搖 / Pan
+// 包: camera (運鏡與轉場) · element 01 · 分類: 鏡頭運動
+// 會發生什麼: 攝影機位置不變，原地由左往右轉動；因為是旋轉，近景與遠景都以相同幅度橫向滑動。
+// 動態規格:
+//   - 攝影機：位置固定（高度 1.5 m）；只改偏航角（yaw），-0.32 rad → +0.32 rad（-18° → +18°，共約 37°）
+//   - 時間：從 0.5 秒轉到 3.4 秒（2.9 秒），三次緩入緩出（相當於 cubic-bezier(0.65,0,0.35,1)）
+//   - 被攝體：人物（身高約 1.8 m）靜止站在正前方 8 m 處，在畫面中由右往左移動
+//   - 無視差：山、建築、樹和人物都偏移相同角度（焦距 330 px，卡片尺寸 539×208）
+//   - 復位：3.4–4.2 秒停住，最後 0.5 秒交叉淡化回起始狀態（一輪 4.7 秒）
+//   - 右上角以整數度數顯示角度（-18° → +18°）
+// 使用時機: 要呈現寬闊的場景，或把視線從畫面一側的對象移到另一側時。
+// 標籤: pan, panning, yaw, rotate, horizontal, camera move, reveal
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#025
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 01
+// 01 パン: 回転なので全ての層が同じだけ横に流れる
+CELLS[0] = shot(camCell((k, w, h, p) => world(k, w, h, cam({ yaw: lerp(-0.32, 0.32, p) }), { person: { x: 0, z: 8 } }),
+  p => `${Math.round(lerp(-0.32, 0.32, p) * 57.3)}°`.replace(/^(\d)/, '+$1')));

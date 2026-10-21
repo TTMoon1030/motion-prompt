@@ -1,6 +1,6 @@
-# Porting a Motion Prompt element
+# 移植 Motion Prompt 元素
 
-`get <id>` returns one text file per element:
+`get <id>` 會為每個元素回傳一個文字檔：
 
 ```js
 // Motion Prompt #012 · MIT License (c) 2026 Shohei Ohtaki · https://showheyohtaki.github.io/motion-prompt/#012
@@ -9,36 +9,36 @@
 CELLS[11] = (k, w, h, u) => { … };     // k = CanvasRenderingContext2D, w/h = card size, u = seconds in [0, cycle)
 ```
 
-`kit <pack>` returns the code the element depends on: the card size, the cycle length, the palette object `C`, font stacks and helper functions (easing, text, shapes). The kit's own header shows how to run one element by itself. Read it; it is the reference for how the pack expects to be called.
+`kit <pack>` 會回傳元素所依賴的程式碼：卡片尺寸、一輪的長度、調色盤物件 `C`、字型堆疊（font stack），以及各種輔助函式（緩動（easing）、文字、形狀）。kit 本身的標頭會示範如何單獨執行一個元素。請先讀它；它是這個包（pack）預期被如何呼叫的參考依據。
 
-Before porting, read the element's **spec** lines. They state the order of the motion and every number that matters. The code is the source of truth; the spec is the same information in words.
+移植之前，先讀元素的**規格**行。規格行寫明動態的先後順序，以及每一個關鍵數值。程式碼才是唯一的依據；規格是以文字寫出的同一份資訊。
 
-Decide first which of two kinds of port this is:
+先判斷這次移植屬於下列兩種中的哪一種：
 
-- **Run the code** (sections 1 and 2): the project can draw on a Canvas 2D context. The element's function runs unchanged and you only supply `u`, a size and a place.
-- **Move the numbers** (sections 3 and 4): the project animates some other way. You rebuild the move there and carry over the timings, easing and amounts.
+- **直接執行程式碼**（第 1、2 節）：專案能在 Canvas 2D context 上繪圖。元素的函式原封不動地執行，你只需提供 `u`、尺寸和位置。
+- **搬移數值**（第 3、4 節）：專案用其他方式製作動畫。你要在那邊重建這個動作，並沿用原本的時間點、緩動與變化量。
 
-## Time: loop or play once
+## 時間：循環，或只播放一次
 
-Every element is written as a loop of `cycle` seconds. Most contain an entrance, a hold and an exit or reset so that the loop closes.
+每個元素都寫成長度為 `cycle` 秒的循環。大多數元素包含進場、停留，以及退場或重設，讓循環能接回起點。
 
-- **Looping use** (backgrounds, indicators, a gallery): `u = t % cycle`, where `t` is the time since the scene started.
-- **Play once and stay** (a title or caption that enters and remains): `u = Math.min(t, uHold)`, where `uHold` is a time inside the hold, after the entrance has finished. Find it from the spec lines or from the phase boundaries in the code. Do not let `u` run on into the exit.
-- **Play once with an exit**: drive `u` through the entrance, keep it at `uHold` for as long as the scene needs, then continue from the start of the exit when the scene ends. This keeps the entrance and exit at their designed speed whatever the scene's length.
-- **Fitting a fixed slot** (a swap into an existing scene): lengthen or shorten the hold, not the motion. Only if the slot is shorter than the entrance plus the exit, scale time evenly (`u = t * k`) and say so in your report.
-- Never pass `u` outside `[0, cycle)`. Start a scene at whatever `u` gives a clean first frame; that is usually `0`, but check the element.
+- **循環使用**（背景、指示器、圖庫）：`u = t % cycle`，其中 `t` 是場景開始後經過的時間。
+- **播放一次後停住**（進場後就一直留在畫面上的標題或字幕）：`u = Math.min(t, uHold)`，其中 `uHold` 是停留期間內、進場已結束之後的某個時間點。可從規格行或程式碼中的階段分界找出它。不要讓 `u` 繼續跑進退場。
+- **播放一次並退場**：讓 `u` 走完進場，在場景需要的時間內維持在 `uHold`，等場景結束時再從退場的起點繼續往下走。這樣不論場景多長，進場與退場都能維持設計好的速度。
+- **配合固定的時段**（替換既有場景中的某一段）：拉長或縮短的是停留，而不是動態本身。只有當時段比進場加退場還短時，才均勻縮放時間（`u = t * k`），並在報告中說明。
+- 絕對不要傳入 `[0, cycle)` 範圍以外的 `u`。場景要從能得到乾淨第一個影格的 `u` 開始；通常是 `0`，但請檢查該元素。
 
-## 1. A plain Canvas engine (a function of time that draws a frame)
+## 1. 一般的 Canvas 引擎（以時間為參數、繪製一個影格的函式）
 
-Set the code up once per pack, in one scope:
+每個包只需在同一個作用域（scope）中設定一次程式碼：
 
-1. the kit (keep its first line),
-2. the element blocks you fetched (keep each first line),
-3. references to the cells you use, for example `const morph = CELLS[11];`.
+1. kit（保留它的第一行），
+2. 你取得的各個元素區塊（每個都保留第一行），
+3. 對你要用的 cell 的參照，例如 `const morph = CELLS[11];`。
 
-If the project is a module, put these in one file and export the cells. Do not copy helpers into each element; they share the kit.
+如果專案是模組，就把這些放進同一個檔案，並匯出這些 cell。不要把輔助函式複製到每個元素裡；它們共用 kit。
 
-**Two packs never share a scope.** Every kit declares the same top-level names (`CW`, `CH`, `CYC`, `C`, `CELLS` and its own helpers), so pasting two kits into one script or module is a syntax error. Give each pack its own module or its own function scope, and export what you need under names that say which pack they come from:
+**兩個包絕不共用同一個作用域。** 每個 kit 都會宣告相同的頂層名稱（`CW`、`CH`、`CYC`、`C`、`CELLS` 以及它自己的輔助函式），所以把兩個 kit 貼進同一個 script 或模組會造成語法錯誤。請讓每個包各自擁有自己的模組或函式作用域，並把需要的東西以能看出來自哪個包的名稱匯出：
 
 ```js
 // motion-prompt-motion.js      (kit "motion" + elements #012 …)
@@ -47,9 +47,9 @@ export const morph = CELLS[11];  export const MOTION = { w: CW, h: CH, cycle: CY
 export const wipe = CELLS[20];   export const CAMERA = { w: CW, h: CH, cycle: 9.4 };  // use the Cycle value in the element header; in this kit CYC is half of it
 ```
 
-Packs can differ in card size and cycle, so always pass each cell the size and cycle of its own pack.
+不同的包可能有不同的卡片尺寸與一輪長度，所以務必傳給每個 cell 它所屬包的尺寸與一輪長度。
 
-**Placing a card in a 1920×1080 frame.** Elements draw in card coordinates (`w` × `h` from the header). Scale the context, not the numbers:
+**把卡片放進 1920×1080 的影格。** 元素以卡片座標繪製（標頭中的 `w` × `h`）。要縮放的是 context，不是數值：
 
 ```js
 function drawElement(ctx, cell, u, x, y, scale, W, H) {   // W, H = the card size from the header
@@ -64,25 +64,25 @@ function drawElement(ctx, cell, u, x, y, scale, W, H) {   // W, H = the card siz
 const s = 1920 / W;  drawElement(ctx, typewriter, u, 0, (1080 - H * s) / 2, s, W, H);
 ```
 
-- Always pass the card's own `w, h`. Passing `1920, 1080` changes the layout, because sizes inside an element are written for the card.
-- The card's aspect ratio is not 16:9. Either place the card as a band or panel inside your layout, or scale it to cover the frame and accept the crop. Check that the important part stays in view.
-- Many elements paint their own card background, often through a kit helper called on the element's first line. To place one over footage or another layer, find that call or fill, and remove or replace it. Report that change.
-- Text sharpness: scaling the context keeps text and shapes as vectors, so no extra step is needed. Draw on a canvas whose pixel size is the final frame size.
+- 一律傳入卡片本身的 `w, h`。傳入 `1920, 1080` 會改變版面配置，因為元素內的尺寸是針對卡片寫的。
+- 卡片的長寬比不是 16:9。你可以把卡片當成版面中的一條橫帶或一個面板來放置，或把它縮放到填滿影格並接受裁切。請確認重要的部分仍留在畫面內。
+- 許多元素會自己繪製卡片背景，通常是透過在元素第一行呼叫的 kit 輔助函式。若要把元素疊在實拍素材或其他圖層上，找出那個呼叫或填色，將它移除或替換，並在報告中說明這項變更。
+- 文字清晰度：縮放 context 會讓文字和形狀維持向量，因此不需要額外步驟。請在像素尺寸等於最終影格尺寸的 canvas 上繪製。
 
-**Several elements in one frame.** Call them in back-to-front order, each inside its own `save()`/`restore()` as above, each with its own `u` computed from its own start time: `u = sceneClock(t - start)`. Reset `globalAlpha`, `filter` and `globalCompositeOperation` between cells if your engine does not already do so.
+**同一個影格中有多個元素。** 依由後到前的順序呼叫，每個都像上面那樣包在各自的 `save()`/`restore()` 之中，並各自依自己的起始時間算出自己的 `u`：`u = sceneClock(t - start)`。如果你的引擎不會自動處理，請在 cell 之間重設 `globalAlpha`、`filter` 和 `globalCompositeOperation`。
 
-**Elements that use an offscreen canvas.** Some elements create a canvas with `document.createElement('canvas')` for masks, blur or compositing.
+**使用離屏 canvas 的元素。** 有些元素會用 `document.createElement('canvas')` 建立 canvas，用來做遮罩、模糊或合成。
 
-- In a browser this works as written.
-- In Node (node-canvas, skia-canvas, @napi-rs/canvas) there is no `document`. Provide the one call they need before the kit runs, for example `globalThis.document = { createElement: () => createCanvas(1, 1) }`, using your library's `createCanvas`.
-- An offscreen canvas is sized in card pixels. When the card is scaled up a lot, its content is upscaled and softens. If that shows, render the element at a larger card scale by scaling inside the offscreen canvas as well, and compare a frame against the demo.
-- `ctx.filter` is not available in every canvas library. If an element uses it, test a frame early.
+- 在瀏覽器中，照原樣就能運作。
+- 在 Node（node-canvas、skia-canvas、@napi-rs/canvas）中沒有 `document`。請在 kit 執行之前，提供它們需要的那一個呼叫，例如 `globalThis.document = { createElement: () => createCanvas(1, 1) }`，並使用你所用函式庫的 `createCanvas`。
+- 離屏 canvas 的尺寸以卡片像素計算。卡片被大幅放大時，其內容也會被放大而變得模糊。如果看得出來，就在離屏 canvas 內同樣套用縮放，以更大的卡片倍率渲染該元素，並拿一個影格與示範（demo）比對。
+- 並非每個 canvas 函式庫都支援 `ctx.filter`。如果元素用到它，請及早測試一個影格。
 
-**Fonts.** Kits use system font stacks. A renderer without those fonts falls back silently and the layout shifts. Either register the project's font and change the font constants in the kit, or confirm that the stack resolves on the rendering machine. If a pack declares font files, load them before drawing the first frame.
+**字型。** kit 使用系統字型堆疊。缺少這些字型的渲染器會默默改用替代字型，導致版面跑掉。請註冊專案的字型並修改 kit 中的字型常數，或確認該字型堆疊在負責渲染的機器上能正確解析。如果包有宣告字型檔，請在繪製第一個影格之前載入它們。
 
 ## 2. Remotion
 
-Draw on a `<canvas>` from the current frame. The element stays a pure function, so every frame renders the same way in preview and in export.
+依目前的影格在 `<canvas>` 上繪製。元素維持為純函式，因此每個影格在預覽與匯出時都會以相同方式渲染。
 
 ```tsx
 import { useCurrentFrame, useVideoConfig } from 'remotion';
@@ -107,60 +107,60 @@ export const Typewriter: React.FC<{ hold?: number }> = ({ hold }) => {
 };
 ```
 
-- `useCurrentFrame()` inside a `<Sequence>` starts at 0, so `t` is already the scene's own time.
-- For a sharp result, give the canvas the pixel size it has on screen: set `width`/`height` to the card size times your scale and call `ctx.scale(scale, scale)` before the cell.
-- Do not use `requestAnimationFrame`, `Date.now()` or `performance.now()`. Time comes from the frame only.
-- If the pack loads font files, wait for them with `delayRender()` / `continueRender()`.
+- 在 `<Sequence>` 之內，`useCurrentFrame()` 從 0 開始，所以 `t` 本身就是該場景自己的時間。
+- 若要得到清晰的結果，請讓 canvas 的像素尺寸等於它在螢幕上的尺寸：把 `width`/`height` 設為卡片尺寸乘上你的縮放倍率，並在呼叫 cell 之前呼叫 `ctx.scale(scale, scale)`。
+- 不要使用 `requestAnimationFrame`、`Date.now()` 或 `performance.now()`。時間只能來自影格。
+- 如果包會載入字型檔，請用 `delayRender()` / `continueRender()` 等待它們載入完成。
 
-## 3. Moving the numbers to CSS, SVG, Lottie or After Effects
+## 3. 把數值搬到 CSS、SVG、Lottie 或 After Effects
 
-Here you do not run the code. You rebuild the move with the target's own tools and copy its values.
+這裡不執行程式碼。你要用目標格式本身的工具重建這個動作，並照抄它的數值。
 
-1. From the code and spec, write a small table per animated property: start time, end time, start value, end value, easing. Take every number from the source. Convert distances with the same factor you use for the card (for example `1920 / W`); angles, scale factors and durations carry over unchanged.
-2. Map the easing. Find the easing helper in the kit and translate it:
-   - a cubic-bezier → `cubic-bezier(a, b, c, d)` in CSS, `keySplines` in SVG, the same four numbers as bezier handles in Lottie and After Effects keyframes;
-   - a power or exponential ease → the closest standard bezier; state which one you chose;
-   - a spring or overshoot → keyframes at the peak and the settle points with the element's own values (for example scale `0 → 1.12 → 1.0` at the stated times). A CSS `linear()` easing or sampled keyframes also work. Do not replace it with a plain ease-out.
-3. Rebuild the shapes with the target's primitives and the element's proportions.
-4. Staggers: keep the per-item delay and the order.
+1. 根據程式碼和規格，為每個有動畫的屬性寫一張小表：開始時間、結束時間、起始值、結束值、緩動。每個數字都取自原始來源。距離要用與卡片相同的換算係數轉換（例如 `1920 / W`）；角度、縮放倍率與持續時間則原樣沿用。
+2. 對應緩動。找出 kit 中的緩動輔助函式並轉換它：
+   - cubic-bezier → CSS 中的 `cubic-bezier(a, b, c, d)`、SVG 中的 `keySplines`，在 Lottie 與 After Effects 的關鍵影格中則是以同樣四個數字作為貝茲曲線把手；
+   - 冪次（power）或指數（exponential）緩動 → 最接近的標準貝茲曲線；並說明你選了哪一條；
+   - 彈簧（spring）或過衝（overshoot）→ 在峰值點與收斂點設置關鍵影格，使用元素本身的數值（例如縮放 `0 → 1.12 → 1.0`，時間點依規格所述）。CSS 的 `linear()` 緩動或取樣後的關鍵影格也可以。不要用單純的 ease-out 取代。
+3. 用目標格式的基本圖形和元素的比例重建形狀。
+4. 錯開（stagger）：保留每個項目的延遲時間與先後順序。
 
-Target notes:
+各目標格式的注意事項：
 
-- **CSS**: one `@keyframes` per property group, `animation-duration` equal to the cycle (or to the entrance when it plays once, with `animation-fill-mode: both`). Percentages are `time / duration`.
-- **SVG**: stroke drawing maps to `stroke-dasharray`/`stroke-dashoffset`; masks map to `clipPath` or `mask`.
-- **Lottie**: keyframe times are frames, `time * fps`. Keep the frame rate of the project.
-- **After Effects**: set keyframes with the values above, or write an expression on the property using `time - inPoint` as `u`. Expressions are JavaScript, so an easing function from the kit can be pasted into the expression and applied to the same values. Include the license line as a comment in a script file; for values typed into keyframes, name the element in the layer or comp comment.
+- **CSS**：每組屬性一個 `@keyframes`，`animation-duration` 等於一輪的長度（若只播放一次，則等於進場的長度，並搭配 `animation-fill-mode: both`）。百分比為 `time / duration`。
+- **SVG**：筆畫描繪對應 `stroke-dasharray`/`stroke-dashoffset`；遮罩對應 `clipPath` 或 `mask`。
+- **Lottie**：關鍵影格的時間以影格計算，即 `time * fps`。維持專案的影格率。
+- **After Effects**：以上述數值設定關鍵影格，或在屬性上寫運算式（expression），把 `time - inPoint` 當作 `u`。運算式就是 JavaScript，所以可以把 kit 中的緩動函式貼進運算式，套用到相同的數值上。在腳本檔中以註解加上授權行；若數值是直接輸入到關鍵影格中，則在圖層或合成（comp）的註解中寫上元素名稱。
 
-Per-pixel effects (blur, glow, grain, compositing with an offscreen canvas) often have no direct equivalent. Use the target's nearest effect, compare against the demo and report the difference.
+逐像素的效果（模糊、光暈、顆粒、以離屏 canvas 合成）常常沒有直接對應的功能。請使用目標格式中最接近的效果，與示範比對，並在報告中說明差異。
 
-## 4. Prompts for video-generation models
+## 4. 給影片生成模型的提示詞
 
-Write sentences, not code. Use the element's English name and spec:
+寫句子，不要寫程式碼。使用元素的英文名稱和規格：
 
-- what is on screen and what moves,
-- the order of the motion and the duration of each part in seconds,
-- how it eases (starts fast and settles, overshoots slightly and returns, constant speed),
-- where it comes to rest and how long it holds,
-- for camera elements: the move, its direction, its speed and the framing at the start and end.
+- 畫面上有什麼、什麼在動，
+- 動態的先後順序，以及每個部分以秒計的長度，
+- 緩動方式（一開始快、然後慢慢停下；稍微過衝再回來；等速），
+- 最後停在哪裡、停留多久，
+- 鏡頭類元素：鏡頭的運動、方向、速度，以及開始與結束時的構圖。
 
-Then add the user's subject, visual style, aspect ratio and clip length. Keep one move per shot; these models handle a single clear move better than a list. For text on screen, state the exact words and expect to check them, since generated text is often wrong. Describe the result in the report as "based on #ID", not as a port.
+接著加上使用者的主體、視覺風格、長寬比與片段長度。每個鏡頭只放一個動作；這類模型處理單一明確的動作，比處理一連串動作好。畫面上的文字要寫出確切的字句，並預期需要檢查，因為生成的文字常常有錯。在報告中把成果描述為「based on #ID」（以 #ID 為基礎），而不是「移植」。
 
-## Colors
+## 顏色
 
-Elements take colors from the palette object `C` in the kit. Read the kit to see which key plays which role (background, text, accents); the key names differ between packs. To re-theme, change the values in `C` once. Do not edit color literals inside elements unless an element defines its own. Keep the contrast relationships: text that was light on a dark ground stays readable, and each accent keeps its role. If the project has brand colors, map them to the palette roles and list the mapping in the report.
+元素的顏色取自 kit 中的調色盤物件 `C`。請閱讀 kit，了解哪個鍵扮演哪個角色（背景、文字、強調色）；各個包的鍵名都不一樣。要換配色時，只需在 `C` 中改一次數值。除非某個元素自行定義了顏色，否則不要修改元素內的顏色常值。保持原本的對比關係：原本在深色底上的淺色文字要維持易讀，每個強調色也要維持原本的角色。如果專案有品牌色，就把它們對應到調色盤的角色，並在報告中列出對應關係。
 
-## Content
+## 內容
 
-The words, numbers and names inside an element are sample content. Replace them with the user's. Text is measured and laid out for the sample's length, so check long replacements: reduce the font size constant or split lines rather than letting text leave the card. Japanese and Latin text have different widths at the same size; check both if the video is bilingual.
+元素裡的文字、數字和名稱都是範例內容。請替換成使用者的內容。文字是依範例的長度來測量與排版的，所以較長的替換內容要檢查：寧可縮小字級常數或拆成多行，也不要讓文字超出卡片。相同字級下，日文（以及中文）與拉丁文字的寬度不同；如果影片是雙語的，兩種都要檢查。
 
-## License line
+## 授權行
 
-Keep each element's first line, `// Motion Prompt #ID · MIT License (c) 2026 Shohei Ohtaki · https://showheyohtaki.github.io/motion-prompt/#ID`, above the code made from it, and the kit's first line above the kit. When only numbers were carried over (section 3), put the same line as a comment where the target format allows comments.
+在由元素製作出來的程式碼上方，保留每個元素的第一行 `// Motion Prompt #ID · MIT License (c) 2026 Shohei Ohtaki · https://showheyohtaki.github.io/motion-prompt/#ID`，並在 kit 上方保留 kit 的第一行。若只沿用了數值（第 3 節），則在目標格式允許註解的地方，以註解放入同一行。
 
-## Check before reporting
+## 回報前的檢查
 
-- the first frame, a frame in mid-motion and the resting frame of each ported scene, compared with the demo when you can view it
-- the loop point, if the element loops: the last frame and the first frame match
-- scene boundaries: nothing pops in or out when a scene starts or ends
-- replaced text fits, and the fonts are the intended ones on the rendering machine
-- the output frame size and frame rate are the project's, not the card's
+- 每個移植場景的第一個影格、動態進行中的一個影格，以及靜止時的影格；能看到示範時，與示範比對
+- 循環的接點（如果元素會循環）：最後一個影格與第一個影格一致
+- 場景邊界：場景開始或結束時，沒有東西突然出現或消失
+- 替換後的文字放得下，而且渲染機器上用的是預期的字型
+- 輸出的影格尺寸與影格率是專案的，而不是卡片的

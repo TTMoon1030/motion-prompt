@@ -1,0 +1,32 @@
+// Motion Prompt #098 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#098
+//
+// 輪廓光 / Rim light
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 02 · 分類: 打光方式與時段
+// 會發生什麼: 周圍變暗，人物左右斜後方的兩盞燈只在頭部與肩膀兩側勾出細細的亮邊；右下的燈位圖標出兩盞燈的位置。
+// 動態規格:
+//   - 場景 1：地平線（y 150）前方是胸部以上的人物（頭部中心 x 270, y 78，半徑 29 px，不畫五官與頭髮）。
+//   - 背景：亮場景 → 暗場景（天空 #2B2D33，地面 #24252A）；人物 #4D5A75 → #1F2128
+//   - 亮邊：以琥珀色 #FFC75A 畫兩個與胸像同形的副本，分別向左、向右偏移 3.5 px 並向上偏移 2.5 px，放在暗色胸像後方（亮邊寬 3.5 px）
+//   - 右下的燈位圖（66×66 px）：從正上方看，燈在 ±135°（左右斜後方）；右上顯示「±135°」
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想把人物或商品從暗背景中分離出來、清楚呈現外形時。
+// 標籤: rim light, rim lighting, edge light, backlight, kicker, outline, studio
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#098
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 02
+// リムライト: 周りが暗くなり、斜め後ろ左右の2灯で頭と肩の輪郭だけが細く光る
+CELLS[1] = cell((k, u) => {
+  const a = env(u);
+  stagePortrait(k, pal(BASE, DARK, a));
+  k.save(); k.globalAlpha = a; k.fillStyle = BASE.lit;
+  for (const dx of [-3.5, 3.5]) { k.save(); k.translate(dx, -2.5); bustPath(k, PX, PY, PR); k.fill(); k.restore(); }
+  k.restore();
+  bust(k, PX, PY, PR, mixc(BASE.person, DARK.person, a));
+  plan(k, [[Math.PI * 0.75, a], [-Math.PI * 0.75, a]]);
+  hud(k, '±135°');
+});

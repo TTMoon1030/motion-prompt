@@ -1,0 +1,47 @@
+// Motion Prompt #072 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#072
+//
+// Empty State / Empty state
+// 包: ui (UI 元件名稱) · element 24 · 分類: 導覽與狀態元件
+// 會發生什麼: 用垃圾桶圖示依序刪除列表的兩列後，出現空盒子的線條圖、「目前還沒有任何內容」和「新增」按鈕。
+// 動態規格:
+//   - 4.5 秒循環，卡片 542×191。兩列的列表（494×48、圓角 8，右端有垃圾桶圖示）。
+//   - 游標在 0.95 秒與 1.65 秒點擊垃圾桶圖示。每列以 0.3 秒（easeInOutCubic）一邊往左移 60 px 一邊淡出；第二列往上移 58 px 到第一列的位置。
+//   - 1.95–2.3 秒（線性）空狀態一邊從下方 8 px 往上升一邊淡入：藍色線條的收件匣圖、「目前還沒有任何內容」（16 px）、藍色「新增」按鈕（112×34）。
+//   - 游標在 3.3 秒點擊「新增」；空狀態在 3.25–3.45 秒淡出，兩列在 3.35–3.7 秒以 easeOutCubic 從左側回來。
+// 使用時機: 在首次使用的畫面或搜尋沒有結果時，想引導下一步該做什麼時使用。
+// 標籤: empty-state, no-data, zero-state, blank-state, no-results, onboarding
+// 尺寸: 542x191 px · 一輪: 4.5 s
+// Needs: kit ui -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/ui.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#072
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 24
+// 24 エンプティステート（Empty state）
+CELLS[23] = ui((w, h, t) => {
+  const r1 = eio(seg(t, 0.95, 1.25)), r2 = eio(seg(t, 1.65, 1.95));
+  const back = eo(seg(t, 3.35, 3.7));
+  const empty = seg(t, 1.95, 2.3) * (1 - seg(t, 3.25, 3.45));
+  bar(24, 14, 130, C.line2, 11);
+  const rows = [[r1, 0], [r2, 1]];
+  rows.forEach(([g, i]) => {
+    const gone = back > 0 ? 1 - back : g; if (gone >= 1) return;
+    const y = 40 + i * 58 - (i === 1 ? 58 * (back > 0 ? 0 : r1) : 0);
+    X.save(); X.globalAlpha = 1 - gone; X.translate(-60 * gone, 0);
+    strokeRR(24, y, 494, 48, 8, C.line2, 1.5); ring(48, y + 24, 9, C.line2, 2); bar(70, y + 12, 200, C.line2, 10); bar(70, y + 28, 140, C.line, 7);
+    // ゴミ箱
+    X.strokeStyle = '#888'; X.lineWidth = 2; X.lineJoin = 'round'; X.strokeRect(476, y + 18, 16, 18); X.beginPath(); X.moveTo(472, y + 17); X.lineTo(496, y + 17); X.moveTo(480, y + 13); X.lineTo(488, y + 13); X.stroke();
+    X.restore();
+  });
+  if (empty > 0) {
+    X.save(); X.globalAlpha = empty; const cy = 70 + 8 * (1 - empty);
+    X.strokeStyle = C.blue; X.lineWidth = 2.6; X.lineJoin = 'round';
+    X.beginPath(); X.moveTo(w / 2 - 26, cy - 4); X.lineTo(w / 2 - 18, cy - 22); X.lineTo(w / 2 + 18, cy - 22); X.lineTo(w / 2 + 26, cy - 4); X.lineTo(w / 2 + 26, cy + 16); X.lineTo(w / 2 - 26, cy + 16); X.closePath(); X.stroke();
+    X.beginPath(); X.moveTo(w / 2 - 26, cy - 4); X.lineTo(w / 2 - 9, cy - 4); X.lineTo(w / 2 - 6, cy + 3); X.lineTo(w / 2 + 6, cy + 3); X.lineTo(w / 2 + 9, cy - 4); X.lineTo(w / 2 + 26, cy - 4); X.stroke();
+    text('まだ何もありません', w / 2, cy + 40, 16, '#555', 600, 'center');
+    fillRR(w / 2 - 56, cy + 62, 112, 34, 8, C.blue); text('追加する', w / 2, cy + 79, 15, '#fff', 600, 'center');
+    X.restore();
+  }
+  pointer([[.3, w + 30, h + 30], [.9, 486, 67], [1.25, 486, 67], [1.6, 486, 67], [2.4, 486, 67], [3.2, w / 2 + 4, 156], [3.5, w / 2 + 4, 156], [4.2, w + 30, h + 30]], [0.95, 1.65, 3.3], t);
+});

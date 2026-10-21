@@ -29,7 +29,7 @@ s.onload = async () => {
     c.width = p.width; c.height = p.height;
     const el = meta && meta.elements[i];
     f.append(c); const cap = document.createElement('figcaption');
-    cap.textContent = `${String(i + 1).padStart(2, '0')} ${el ? el.name.ja + ' / ' + el.name.en : ''}`;
+    cap.textContent = `${String(i + 1).padStart(2, '0')} ${el ? (el.name['zh-Hant'] || el.name.ja) + ' / ' + el.name.en : ''}`;
     f.append(cap); document.getElementById('g').append(f);
     items.push({ cell, k: c.getContext('2d') });
   });

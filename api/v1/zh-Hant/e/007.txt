@@ -1,0 +1,49 @@
+// Motion Prompt #007 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#007
+//
+// 數字跳動 / Count-up
+// 包: motion (Motion Graphics 動態手法) · element 07 · 分類: 登場與文字動態
+// 會發生什麼: 數字飛快往上跳，最後穩穩停在最終數值。
+// 動態規格:
+//   - 每 4.7 秒播放 1 次。0.1–0.4 秒淡入，4.0–4.4 秒淡出
+//   - 數字（粗體 104 px）：在 0.45–2.9 秒從 0 跳到 2,480。數值 = round(目標值 × (1 − (1 − p)^4))：一開始快、最後慢
+//   - 加上千分位逗號。每個數字等寬並靠右對齊，數值變化時不會左右晃動
+//   - 2.9 秒停定：顏色從白色變成黃色，縮放比例小幅彈跳 1 + 0.07·e^(−7t)·cos(15t)
+//   - 左側的向上箭頭（薄荷綠圓形，半徑 34）：從 0.35 秒起以彈簧曲線 1 − e^(−7t)·cos(14t) 出現；計數期間上下震動 6 px × (1 − p)^3 × sin(30u)
+//   - 下方長條（330 × 12，藍色→薄荷綠漸層）：依 數值 ÷ 目標值 的比例填滿
+// 使用時機: 想讓營收、使用者人數、達成率等數字顯得龐大或持續成長時使用。
+// 標籤: count-up, counter, number, odometer, stats, kpi, progress
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#007
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 07
+// 07 カウントアップ（数字が勢いよく増えて、最後にピタッと決まる）
+CELLS[6] = (k, w, h, u) => {
+  stage(k);
+  const TARGET = 2480, a = P(u, 0.1, 0.4) * (1 - P(u, 4.0, 4.4));
+  const p = P(u, 0.45, 2.9), v = Math.round(TARGET * (1 - Math.pow(1 - p, 4)));
+  const s = v.toLocaleString('en-US'), f = `800 104px ${DISP}`;
+  k.font = f; const dw = k.measureText('0').width + 2, cw = k.measureText(',').width;
+  const full = TARGET.toLocaleString('en-US'); let tot = 0; for (const ch of full) tot += ch === ',' ? cw : dw;
+  const land = u - 2.9, pop = 1 + (land > 0 ? 0.07 * Math.exp(-7 * land) * Math.cos(15 * land) : 0);
+  const X = w / 2 + 42, Y = 96;
+  k.save(); k.globalAlpha = a; k.translate(X, Y); k.scale(pop, pop);
+  let x = tot / 2;   // 右そろえ
+  const speed = p < 1 ? Math.pow(1 - p, 3) : 0;
+  for (const ch of [...s].reverse()) {
+    const cwid = ch === ',' ? cw : dw; x -= cwid;
+    txt(k, ch, x + cwid / 2, 0, f, land > 0 ? C.yel : '#fff', 'center', 'middle');
+  }
+  k.restore();
+  // 上向きの矢印チップ
+  const ar = spring(u - 0.35, 14, 7) * (1 - P(u, 4.0, 4.3)), bob = speed * 6 * Math.sin(u * 30);
+  if (ar > 0.01) { k.save(); k.translate(X - tot / 2 - 58, Y - 2 + bob); k.scale(ar, ar); k.fillStyle = C.mint; k.beginPath(); k.arc(0, 0, 34, 0, 7); k.fill(); k.strokeStyle = C.navy; k.lineWidth = 8; k.lineCap = 'round'; k.lineJoin = 'round'; k.beginPath(); k.moveTo(0, 15); k.lineTo(0, -14); k.moveTo(-13, -1); k.lineTo(0, -15); k.lineTo(13, -1); k.stroke(); k.restore(); }
+  // 下のバー
+  const bw = 330, bx = w / 2 - bw / 2, by = 168;
+  k.globalAlpha = a; k.fillStyle = C.navy3; rr(k, bx, by, bw, 12, 6); k.fill();
+  const g = k.createLinearGradient(bx, 0, bx + bw, 0); g.addColorStop(0, C.blue); g.addColorStop(1, C.mint);
+  k.fillStyle = g; rr(k, bx, by, Math.max(12, bw * (v / TARGET)), 12, 6); k.fill(); k.globalAlpha = 1;
+};

@@ -1,0 +1,37 @@
+// Motion Prompt #108 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#108
+//
+// 追焦 / Panning shot
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 12 · 分類: 鏡頭與相機效果
+// 會發生什麼: 相機跟著行駛的汽車移動，汽車在畫面中央保持清晰，只有後方的建築、樹與路燈往橫向拉出流動線條。
+// 動態規格:
+//   - 街角：後方是一排建築、樹與路燈，道路在 y 132–162（前景沒有大人物）
+//   - 汽車：沒有效果時 5 秒內從 x −80 開到 620；有效果時停在 x 270 ±10 px 範圍內
+//   - 流動：背景往橫向錯開、分散在 46 px 寬度內畫 12 次後取平均（錯開寬度 0 → 46 px）
+//   - 車輪：一條輻條線每 5 秒轉 12 圈
+//   - 右上快門速度 1/1000 → 1/15
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想用一張照片呈現汽車、腳踏車或跑者的速度感時。
+// 標籤: panning, panning shot, motion blur, speed, sports photography, slow shutter
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#108
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 12
+// 流し撮り: 走る車を追ってカメラを振ると、車はくっきり、背景だけ横に流れる
+CELLS[11] = cell((k, u) => {
+  const a = env(u);
+  const drive = lerp(-80, 620, u / CYC), x = lerp(drive, 270 + 10 * Math.sin(u / CYC * TAU), a);
+  const S = 46 * a, n = S < 0.5 ? 1 : 12;
+  for (let i = 0; i < n; i++) {   // 背景を横にずらして重ね、平均をとる（流れ）
+    k.save(); k.globalAlpha = 1 / (i + 1); k.translate(n > 1 ? lerp(-S / 2, S / 2, i / (n - 1)) : 0, 0); stageStreet(k, BASE, { car: false, person: false }); k.restore();
+  }
+  const D = pen(k); car(D, x, BASE, { head: BASE.lit });
+  // 車輪の回転（1周に12回転＝継ぎ目なし）
+  k.save(); k.strokeStyle = BASE.tire; k.lineWidth = 1.6;
+  for (const wx of [x - 21, x + 21]) { const t = u / CYC * TAU * 12; k.beginPath(); k.moveTo(wx - Math.cos(t) * 5, 156 - Math.sin(t) * 5); k.lineTo(wx + Math.cos(t) * 5, 156 + Math.sin(t) * 5); k.stroke(); }
+  k.restore();
+  hud(k, a > 0.5 ? '1/15' : '1/1000');
+});

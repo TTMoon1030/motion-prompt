@@ -1,0 +1,37 @@
+// Motion Prompt #040 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#040
+//
+// 定格 / Freeze frame
+// 包: camera (運鏡與轉場) · element 16 · 分類: 拍攝手法與時間效果
+// 會發生什麼: 跳起的人物到達最高點的瞬間畫面停住，1.4 秒後從同一個影格繼續播放。
+// 動態規格:
+//   - 攝影機：完全固定（高度 1.3 m）；停住的是影片時間
+//   - 定格：在 1.6 秒停住、3.0 秒恢復（停 1.4 秒）；影片時間在 0–1.6 秒正常前進，定格期間維持 1.6 秒，恢復後為 u-1.4
+//   - 被攝體：7 m 外人物的跳躍是影片時間 0.6–2.6 秒的拋物線，頂點 1.1 m；定格點正好落在頂點（進度 50%）
+//   - 定格期間，9 片落葉也一起停住；落葉速度是 13 慢動作的 1.5 倍
+//   - 定格標示：5 px 的藍色外框，以及下方中央的暫停圖示（68×40 px 白色圓角框內兩條藍色直條），以 0.12 秒淡入淡出
+//   - 右上角只在定格時顯示「FREEZE」；沒有交叉淡化復位
+// 使用時機: 要強調決定性的瞬間，或暫停畫面以便疊上姓名、說明字幕時。
+// 標籤: freeze frame, still frame, pause, hold, stop motion, highlight
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#040
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 16
+// 16 フリーズフレーム
+CELLS[15] = shot((k, w, h, u) => {
+  // 跳躍の頂点で 1.4 秒止める
+  const tj = u < 1.6 ? u : u < 3.0 ? 1.6 : u - 1.4;   // 実時間→映像時間
+  const q = P(tj, 0.6, 2.6);
+  const frozen = u >= 1.6 && u < 3.0;
+  world(k, w, h, cam({ y: 1.3 }), { person: { z: 7, y: jumpY(q), armUp: q > 0 && q < 1 }, extra: leaves(tj, 1.5) });
+  if (frozen) {
+    const a = Math.min(1, (u - 1.6) / 0.12, (3.0 - u) / 0.12);
+    k.save(); k.globalAlpha = a; k.strokeStyle = C.blue; k.lineWidth = 5; k.strokeRect(2.5, 2.5, w - 5, h - 5);
+    k.fillStyle = 'rgba(255,255,255,.88)'; rr(k, w / 2 - 34, h - 58, 68, 40, 8); k.fill();
+    k.fillStyle = C.blue; k.fillRect(w / 2 - 12, h - 49, 8, 22); k.fillRect(w / 2 + 4, h - 49, 8, 22); k.restore();
+  }
+  return frozen ? 'FREEZE' : '';
+});

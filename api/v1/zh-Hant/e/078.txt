@@ -1,0 +1,39 @@
+// Motion Prompt #078 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#078
+//
+// Scroll Snap / Scroll snap
+// 包: lp (Landing Page 與網站效果) · element 06 · 分類: 捲動時的效果
+// 會發生什麼: 稍微捲動一下，頁面就自動捲完剩下的距離，讓下一個區塊的頂端剛好對齊畫面頂端。
+// 動態規格:
+//   - 每個區塊的高度等於視窗高度（168 px）。第一個是淺藍底，第二個是深藍色。
+//   - 每 2.4 秒吸附一次。0.45–0.85 秒使用者只捲動 34 px（三次方 easeOut）。
+//   - 0.9–1.5 秒頁面自動捲完剩下的 134 px，對齊下一個區塊的頂端（三次方 easeOut）。
+//   - 後 2.4 秒以相同動作往上，回到第一個區塊（scroll-snap-type: y mandatory 的行為）。
+// 使用時機: 想讓頁面像投影片一樣，一次看一整個畫面時。
+// 標籤: scroll-snap, snap, full-page, sections, css, mandatory, scroll
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#078
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 06
+// 06 スクロールスナップ（少しスクロールすると、次のセクションの頭までピタッと送られる）
+CELLS[5] = (k, w, h, u) => {
+  frame(k);
+  const T = CYC / 2, lu = mod(u, T), dir = u < T ? 1 : -1, from = u < T ? 0 : VH, DRIFT = 34;
+  const y = from + dir * (DRIFT * eOut(P(lu, 0.45, 0.85)) + (VH - DRIFT) * eOut(P(lu, 0.9, 1.5)));
+  view(k, () => {
+    k.save(); k.translate(0, -y);
+    for (let i = 0; i < 2; i++) {
+      const y0 = i * VH, dark = i === 1;
+      k.fillStyle = dark ? C.ink : C.blueL; k.fillRect(0, y0, VW, VH);
+      txt(k, '0' + (i + 1), 34, y0 + 70, `800 46px ${EN}`, C.acc);
+      txt(k, dark ? '使ってみる' : '知ってもらう', 34, y0 + 102, `800 18px ${JP}`, dark ? '#fff' : C.ink);
+      bars(k, 34, y0 + 118, 170, 2, dark ? 'rgba(255,255,255,.3)' : '#C3CDEA');
+      pic(k, 262, y0 + 24, 220, 120, dark ? 2 : 0, 8);
+    }
+    k.restore();
+    sbar(k, y / VH, 0.5);
+  });
+};
