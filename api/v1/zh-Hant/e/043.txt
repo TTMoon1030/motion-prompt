@@ -1,0 +1,34 @@
+// Motion Prompt #043 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#043
+//
+// 甩鏡 / Whip pan
+// 包: camera (運鏡與轉場) · element 19 · 分類: 轉場
+// 會發生什麼: 攝影機極快地橫向甩動，在拉出殘影的模糊中換成下一個場景。
+// 動態規格:
+//   - 銜接：0.8 秒，從 1.7 秒到 2.5 秒；前 0.4 秒前一個畫面甩出，後 0.4 秒下一個畫面甩入並停穩
+//   - 前半：前一個畫面的偏航角 0 → +0.45 rad（約 26°），二次緩入緩出；後半：下一個畫面的偏航角 -0.45 rad → 0，相同緩動
+//   - 切換：在進度 50% 時直接替換，此時模糊最強，看不出切點
+//   - 模糊：在前後 ±1.6 影格（以 30 fps 計）的範圍內繪製 9 張並取平均
+//   - 攝影機：高度 1.4 m，除了甩動期間都固定；被攝體（A 為人物，B 為車子與街景）不動
+//   - 每 4.7 秒交替進行 A→B 與 B→A（來回一次 9.4 秒）；右上角顯示「A → B」/「B → A」
+// 使用時機: 要在保持氣勢的同時切換地點或話題時。
+// 標籤: whip pan, swish pan, motion blur, fast pan, transition, energy
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#043
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 19
+// 19 ホイップパン（ブレで次の場面へ）
+CELLS[18] = shot(abCell((k, w, h, u, A, B) => {
+  const t0 = 1.7, t1 = 2.5;
+  const at = (kk, s) => {   // s: 0..1 の進み。前半 A を右へ振り、後半 B が左から止まる
+    if (s < .5) world(kk, w, h, cam({ y: 1.4, yaw: eIOs(s * 2) * 0.45 }), A === sceneA ? { person: { x: -0.6, z: 7 } } : SB);
+    else world(kk, w, h, cam({ y: 1.4, yaw: -(1 - eIOs((s - .5) * 2)) * 0.45 }), B === sceneA ? { person: { x: -0.6, z: 7 } } : SB);
+  };
+  if (u < t0) return A(k, w, h);
+  if (u > t1) return B(k, w, h);
+  const s = P(u, t0, t1), ds = 1 / FPS / (t1 - t0);
+  mblur(k, at, clamp(s - ds * 1.6), clamp(s + ds * 1.6), 9);
+}));

@@ -1,0 +1,35 @@
+// Motion Prompt #070 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#070
+//
+// Spinner
+// 包: ui (UI 元件名稱) · element 22 · 分類: 導覽與狀態元件
+// 會發生什麼: 點擊「送出」後畫面蒙上一層白色，中央有藍色弧線旋轉；完成後變成勾號並淡出。
+// 動態規格:
+//   - 4.5 秒循環，卡片 542×191。游標在 1.0 秒點擊下方中央的「送出」（120×40）。
+//   - 1.05–1.2 秒（線性）在整張卡片上淡入白色遮罩（不透明度 0.78）與 Spinner。
+//   - Spinner 位於 (271, 92)：半徑 26、粗 6 的淺色圓環，上方疊一段長 243°（1.35π）的藍色弧線（圓頭端點），每秒旋轉 1.3 圈（468°/秒）。
+//   - 2.95–3.05 秒 Spinner 淡出；2.95–3.2 秒藍色圓形（半徑 28）與白色勾號以縮放 0.7 → 1（easeOutCubic）出現。
+//   - 3.75–4.0 秒線性地連同遮罩全部淡出。
+// 使用時機: 用於送出、儲存等無法預估長度的短暫等待。
+// 標籤: spinner, loading, loader, activity-indicator, progress-circle, busy
+// 尺寸: 542x191 px · 一輪: 4.5 s
+// Needs: kit ui -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/ui.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#070
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 22
+// 22 スピナー（Spinner）
+CELLS[21] = ui((w, h, t) => {
+  const load = seg(t, 1.05, 1.2) * (1 - seg(t, 2.95, 3.05));
+  const done = seg(t, 2.95, 3.15) * (1 - seg(t, 3.75, 4.0));
+  pageLines(24, 18, 494); strokeRR(24, 90, 494, 34, 7, C.line2, 1.5);
+  fillRR(w / 2 - 60, 140, 120, 40, 8, C.blue); text('送信', w / 2, 160, 16, '#fff', 600, 'center');
+  const ov = Math.max(load, done);
+  if (ov > 0) {
+    X.fillStyle = `rgba(255,255,255,${.78 * ov})`; X.fillRect(0, 0, w, h);
+    if (load > 0) { X.save(); X.globalAlpha = load; ring(w / 2, 92, 26, '#e3e8f5', 6); X.beginPath(); const a0 = t * Math.PI * 2 * 1.3; X.arc(w / 2, 92, 26, a0, a0 + Math.PI * 1.35); X.strokeStyle = C.blue; X.lineWidth = 6; X.lineCap = 'round'; X.stroke(); X.restore(); }
+    if (done > 0) { X.save(); X.globalAlpha = done; const s = .7 + .3 * eo(seg(t, 2.95, 3.2)); X.translate(w / 2, 92); X.scale(s, s); circle(0, 0, 28, C.blue); check(0, 0, 11, '#fff', 4); X.restore(); }
+  }
+  pointer([[.3, w + 30, h + 30], [.95, w / 2 + 6, 166], [1.5, w / 2 + 6, 166], [2.2, w + 30, h + 30]], [1.0], t);
+});

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* Motion Prompt skill CLI · MIT License (c) 2026 Shohei Ohtaki · https://github.com/showheyohtaki/motion-prompt */
+// Traditional Chinese edition: https://github.com/TTMoon1030/motion-prompt (zh-Hant is the default language).
 // Node 18+, no dependencies. Reads the static Motion Prompt API (api/v1) and prints what an agent needs.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -10,11 +11,14 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const VERSION = '0.1.0';
-const SITE = 'https://showheyohtaki.github.io/motion-prompt/';
+const SITE = 'https://ttmoon1030.github.io/motion-prompt/';
 const REMOTES = [
-  'https://showheyohtaki.github.io/motion-prompt/api/v1',
-  'https://raw.githubusercontent.com/showheyohtaki/motion-prompt/main/api/v1',
+  'https://ttmoon1030.github.io/motion-prompt/api/v1',
+  'https://raw.githubusercontent.com/TTMoon1030/motion-prompt/main/api/v1',
 ];
+const LANGS = ['zh-Hant', 'ja', 'en'];
+const DEFAULT_LANG = 'zh-Hant';
+const LANG_ALIAS = { 'zh-hant': 'zh-Hant', zh: 'zh-Hant', 'zh-tw': 'zh-Hant', 'zh-hk': 'zh-Hant', tw: 'zh-Hant', ja: 'ja', jp: 'ja', en: 'en' };
 const MAX_GET = 8;
 const EXIT = { OK: 0, NOT_FOUND: 1, USAGE: 2, NETWORK: 3, TIMEOUT: 4 };
 const PICK_TIMEOUT = 900; // seconds
@@ -30,7 +34,7 @@ class CliError extends Error {
 // ---------- arguments ----------
 
 const VALUE_FLAGS = new Set(['lang', 'pack', 'limit', 'out', 'timeout']);
-const BOOL_FLAGS = new Set(['refresh', 'help', 'version', 'no-open', 'local']);
+const BOOL_FLAGS = new Set(['refresh', 'help', 'version', 'no-open', 'local', 'remote']);
 
 function parseArgs(argv) {
   const flags = {};
@@ -42,40 +46,41 @@ function parseArgs(argv) {
     const eq = a.indexOf('=');
     const name = eq === -1 ? a.slice(2) : a.slice(2, eq);
     if (BOOL_FLAGS.has(name)) { flags[name] = true; continue; }
-    if (!VALUE_FLAGS.has(name)) throw new CliError(EXIT.USAGE, `Unknown option --${name}. Run with --help.`);
+    if (!VALUE_FLAGS.has(name)) throw new CliError(EXIT.USAGE, `不認得的選項 --${name}。請用 --help 查看用法。`);
     const value = eq === -1 ? argv[++i] : a.slice(eq + 1);
-    if (value === undefined || value === '') throw new CliError(EXIT.USAGE, `Option --${name} needs a value.`);
+    if (value === undefined || value === '') throw new CliError(EXIT.USAGE, `選項 --${name} 需要一個值。`);
     flags[name] = value;
   }
   return { flags, command: rest[0], args: rest.slice(1) };
 }
 
-const HELP = `motion-prompt ${VERSION} — Motion Prompt catalog for coding agents
+const HELP = `motion-prompt ${VERSION}（繁體中文版）— 給程式 AI 用的 Motion Prompt 名稱資料庫
 ${SITE}
 
-Usage: node motion-prompt.mjs <command> [options]
+用法: node motion-prompt.mjs <指令> [選項]
 
-  pick                  open the gallery so the user can pick; prints what they picked   [--pack <pack>]
-                        [--timeout <seconds, default ${PICK_TIMEOUT}>] [--no-open] [--local]
-  search <words...>     best matches (English or Japanese words)   [--pack <pack>] [--limit N]
-  list                  packs, categories and counts
-  list --pack <pack>    every element in one pack
-  get <id> [<id>...]    code + spec for up to ${MAX_GET} elements (accepts 12, 012, #012 or a demo URL)
-  prompt <id> [...]     the copy-paste prompt for an element
-  kit <pack>            shared constants and helpers the pack's elements need
-  info                  data source, counts, version, cache folder
+  pick                  開啟圖庫讓使用者挑選，並印出挑選結果   [--pack <包>]
+                        [--timeout <秒數，預設 ${PICK_TIMEOUT}>] [--no-open] [--local | --remote]
+  search <關鍵字...>    找出最符合的元素（中文、日文、英文都可以）   [--pack <包>] [--limit N]
+  list                  各個包、分類和數量
+  list --pack <包>      列出一個包裡的所有元素
+  get <id> [<id>...]    印出規格與程式碼，一次最多 ${MAX_GET} 個（可寫 12、012、#012 或範例網址）
+  prompt <id> [...]     單一元素可直接複製使用的提示詞
+  kit <包>              這個包的元素共用的常數與輔助函式
+  info                  資料來源、數量、版本、快取資料夾
 
-Options:
-  --lang ja|en          language of names and text (default en; Japanese search words switch to ja)
-  --out <dir>           write files into <dir> instead of printing (get, prompt, kit)
-  --refresh             ignore the disk cache
-  --no-open             pick: print the gallery URL instead of opening a browser
-  --local               pick: serve the gallery from this clone of the repository instead of the public site
-Environment:
-  MOTION_PROMPT_BASE    comma-separated data sources (folder path or URL) used instead of the defaults
-  MOTION_PROMPT_CACHE   cache folder (default ~/.cache/motion-prompt, then the temp folder)
-  MOTION_PROMPT_TTL     seconds before the cached catalog is fetched again (default 21600)
-Exit codes: 0 ok · 1 not found · 2 usage · 3 no data source reachable · 4 pick timed out`;
+選項:
+  --lang zh-Hant|ja|en  名稱與文字的語言（預設 zh-Hant，也接受 zh、zh-TW；搜尋字含日文假名時自動改用 ja）
+  --out <資料夾>        把檔案寫進資料夾，而不是印出來（get、prompt、kit）
+  --refresh             不使用磁碟快取
+  --no-open             pick：只印出圖庫網址，不自動開瀏覽器
+  --local               pick：一定從這份完整的儲存庫在本機提供圖庫（有完整儲存庫時預設就是如此）
+  --remote              pick：改用線上圖庫 ${SITE}
+環境變數:
+  MOTION_PROMPT_BASE    以逗號分隔的資料來源（資料夾路徑或網址），取代預設來源
+  MOTION_PROMPT_CACHE   快取資料夾（預設 ~/.cache/motion-prompt，不行時用系統暫存資料夾）
+  MOTION_PROMPT_TTL     快取的目錄多少秒後重新下載（預設 21600）
+結束代碼: 0 成功 · 1 找不到 · 2 用法錯誤 · 3 連不到任何資料來源 · 4 pick 等待逾時`;
 
 // ---------- data sources ----------
 
@@ -188,13 +193,13 @@ class Store {
         const stale = cached || this.cacheRead('catalog.json');
         if (stale) {
           text = stale.text; this.fromCache = true;
-          process.stderr.write('motion-prompt: data source unreachable, using the cached catalog.\n');
+          process.stderr.write('motion-prompt: 連不到資料來源，改用快取的目錄。\n');
         } else throw this.unreachable('catalog.json', false); // no catalog anywhere = no usable source
       }
     }
     let data;
-    try { data = JSON.parse(text); } catch { throw new CliError(EXIT.NETWORK, `catalog.json from ${this.usedBase || 'cache'} is not valid JSON.`); }
-    if (!data || !Array.isArray(data.elements)) throw new CliError(EXIT.NETWORK, 'catalog.json has no "elements" list.');
+    try { data = JSON.parse(text); } catch { throw new CliError(EXIT.NETWORK, `來自 ${this.usedBase || '快取'} 的 catalog.json 不是有效的 JSON。`); }
+    if (!data || !Array.isArray(data.elements)) throw new CliError(EXIT.NETWORK, 'catalog.json 裡沒有 "elements" 清單。');
     this.catalog = data;
     return data;
   }
@@ -214,16 +219,16 @@ class Store {
   }
 
   unreachable(rel, missing) {
-    if (missing) return new CliError(EXIT.NOT_FOUND, `Not found in the Motion Prompt data: ${rel}\nSources checked:\n${this.bases.map((b) => `  ${b}`).join('\n')}`);
+    if (missing) return new CliError(EXIT.NOT_FOUND, `Motion Prompt 的資料裡找不到: ${rel}\n檢查過的來源:\n${this.bases.map((b) => `  ${b}`).join('\n')}`);
     const lines = [
-      `motion-prompt: could not reach the Motion Prompt data (${rel}) and nothing is cached.`,
-      'Tried:',
+      `motion-prompt: 連不到 Motion Prompt 的資料（${rel}），快取裡也沒有。`,
+      '嘗試過:',
       ...this.failures.map((f) => `  ${f}`),
       this.failures.length && this.failures.every((f) => f.endsWith('HTTP 404'))
-        ? 'The sources answered, but none of them has this file. The data may not be published at these addresses yet.\nSet MOTION_PROMPT_BASE to a local copy of api/v1 if you have one.'
+        ? '來源有回應，但都沒有這個檔案，資料可能還沒發布到這些網址（例如 GitHub Pages 尚未開啟）。\n如果手邊有 api/v1 的本機複本，請把 MOTION_PROMPT_BASE 指向它。'
         : this.remote
-        ? 'This command needs HTTPS access to showheyohtaki.github.io or raw.githubusercontent.com.\nAllow network access for this command and run it again, or set MOTION_PROMPT_BASE to a local copy of api/v1.'
-        : 'Check that MOTION_PROMPT_BASE points at a folder that contains catalog.json.',
+        ? '這個指令需要能用 HTTPS 連到 ttmoon1030.github.io 或 raw.githubusercontent.com。\n請允許這個指令使用網路後再執行一次，或把 MOTION_PROMPT_BASE 指向 api/v1 的本機複本。'
+        : '請確認 MOTION_PROMPT_BASE 指向含有 catalog.json 的資料夾。',
     ];
     return new CliError(EXIT.NETWORK, lines.join('\n'));
   }
@@ -231,9 +236,11 @@ class Store {
 
 // ---------- catalog helpers ----------
 
-const HAS_JA = /[぀-ヿ㐀-鿿ｦ-ﾟ]/;
+const HAS_KANA = /[぀-ヿｦ-ﾟ]/;        // hiragana / katakana: the words are Japanese
+const HAN_RUN = /^[㐀-鿿豈-﫿]{3,}$/;
 const tx = (v, lang) => (v == null ? '' : typeof v === 'string' ? v : Array.isArray(v) ? v.join(' ') : String(v[lang] ?? v.en ?? v.ja ?? ''));
-const both = (v) => (v == null ? '' : typeof v === 'string' ? v : Array.isArray(v) ? v.join(' ') : `${tx(v.ja, 'ja')} ${tx(v.en, 'en')}`);
+// Every language of a text field, for searching.
+const both = (v) => (v == null ? '' : typeof v === 'string' ? v : Array.isArray(v) ? v.join(' ') : Object.values(v).map((x) => tx(x, 'en')).join(' '));
 const packKey = (p) => String(p.pack ?? p.id ?? p.slug ?? p.name ?? '');
 const pad = (n) => String(n).padStart(3, '0');
 const demoUrl = (id) => `${SITE}#${id}`;
@@ -249,13 +256,13 @@ function categoryLabel(cat, e, lang) {
   const p = packsOf(cat).find((x) => packKey(x) === e.pack);
   const c = p && Array.isArray(p.categories) ? p.categories.find((x) => x.slug === e.category) : null;
   if (!c) return { label: e.category || '', haystack: e.category || '' };
-  return { label: tx(c, lang) || c.slug, haystack: `${c.slug} ${c.ja ?? ''} ${c.en ?? ''}` };
+  return { label: tx(c, lang) || c.slug, haystack: `${c.slug} ${c.ja ?? ''} ${c.en ?? ''} ${c['zh-Hant'] ?? ''}` };
 }
 
 function requirePack(cat, name) {
   const wanted = String(name).toLowerCase();
   const found = packsOf(cat).find((p) => packKey(p).toLowerCase() === wanted);
-  if (!found) throw new CliError(EXIT.NOT_FOUND, `No pack named "${name}". Packs: ${packsOf(cat).map(packKey).join(', ')}`);
+  if (!found) throw new CliError(EXIT.NOT_FOUND, `沒有叫做「${name}」的包。現有的包: ${packsOf(cat).map(packKey).join(', ')}`);
   return packKey(found);
 }
 
@@ -265,7 +272,7 @@ function parseId(token) {
 }
 
 function resolveIds(cat, tokens, max) {
-  if (!tokens.length) throw new CliError(EXIT.USAGE, 'Give at least one element id, e.g. 12, #045 or a demo URL.');
+  if (!tokens.length) throw new CliError(EXIT.USAGE, '請至少給一個元素編號，例如 12、#045 或範例網址。');
   const ids = [];
   const bad = [];
   for (const t of tokens) {
@@ -275,9 +282,9 @@ function resolveIds(cat, tokens, max) {
   }
   if (bad.length) {
     const all = cat.elements.map((e) => e.id);
-    throw new CliError(EXIT.NOT_FOUND, `No such element: ${bad.join(', ')}. The catalog has ${all.length} elements (#${all[0]}–#${all[all.length - 1]}). Use "search" or "list" to find ids; do not guess them.`);
+    throw new CliError(EXIT.NOT_FOUND, `沒有這個元素: ${bad.join(', ')}。目錄共有 ${all.length} 個元素（#${all[0]}–#${all[all.length - 1]}）。請用 search 或 list 找編號，不要用猜的。`);
   }
-  if (ids.length > max) throw new CliError(EXIT.USAGE, `Too many ids (${ids.length}). Fetch at most ${max} per call, and only the ones you will use.`);
+  if (ids.length > max) throw new CliError(EXIT.USAGE, `編號太多（${ids.length} 個）。一次最多取 ${max} 個，而且只取真的會用到的。`);
   return ids;
 }
 
@@ -289,7 +296,7 @@ function line(cat, e, lang) {
 
 function score(cat, e, tokens) {
   const name = both(e.name).toLowerCase();
-  const names = [tx(e.name, 'ja'), tx(e.name, 'en')].map((s) => s.toLowerCase());
+  const names = Object.values(e.name || {}).map((s) => String(s).toLowerCase());
   const tags = (e.tags || []).map((t) => String(t).toLowerCase());
   const slug = String(e.slug || '').toLowerCase();
   const catHay = `${categoryLabel(cat, e, 'en').haystack} ${e.pack} ${both((packsOf(cat).find((p) => packKey(p) === e.pack) || {}).title)}`.toLowerCase();
@@ -300,6 +307,8 @@ function score(cat, e, tokens) {
   for (const raw of tokens) {
     const forms = [raw];
     if (/^[a-z]{4,}s$/.test(raw)) forms.push(raw.slice(0, -1));
+    // Chinese is written without spaces: "文字出現" also tries 文字 / 字出 / 出現 (weighted lower in the loop below).
+    const grams = HAN_RUN.test(raw) ? [...raw].slice(0, -1).map((c, i) => c + raw[i + 1]) : [];
     let best = 0;
     for (const t of forms) {
       let s = 0;
@@ -311,6 +320,16 @@ function score(cat, e, tokens) {
       if (summary.includes(t)) s += 2;
       if (deep.includes(t)) s += 1;
       best = Math.max(best, s);
+    }
+    if (!best && grams.length) {
+      let hit = 0;
+      let s = 0;
+      for (const g of grams) {
+        let gs = 0;
+        if (name.includes(g)) gs = 4; else if (catHay.includes(g)) gs = 2; else if (summary.includes(g)) gs = 1; else if (deep.includes(g)) gs = 0.5;
+        if (gs) { hit++; s += gs; }
+      }
+      if (hit * 2 >= grams.length) best = s / grams.length * 2;
     }
     if (best > 0) matched++;
     total += best;
@@ -333,7 +352,7 @@ function emit(files, outDir) {
 // ---------- commands ----------
 
 async function cmdSearch(store, args, flags, lang) {
-  if (!args.length) throw new CliError(EXIT.USAGE, 'search needs at least one word, e.g. "search typewriter" or "search 文字 登場".');
+  if (!args.length) throw new CliError(EXIT.USAGE, 'search 至少需要一個關鍵字，例如「search 打字機」「search 文字 出現」或「search typewriter」。');
   const cat = await store.loadCatalog();
   const pack = flags.pack ? requirePack(cat, flags.pack) : null;
   const limit = Math.max(1, Math.min(50, Number(flags.limit) || 8));
@@ -344,12 +363,12 @@ async function cmdSearch(store, args, flags, lang) {
     .filter((h) => h.matched > 0)
     .sort((a, b) => b.matched - a.matched || b.total - a.total || a.e.id.localeCompare(b.e.id));
   if (!hits.length) {
-    console.log(`No match for "${args.join(' ')}"${pack ? ` in pack ${pack}` : ''}. Try other words (English tags match best), or browse with "list --pack <pack>".`);
+    console.log(`找不到符合「${args.join(' ')}」的元素${pack ? `（包 ${pack}）` : ''}。請換個關鍵字（英文標籤最容易命中），或用「list --pack <包>」瀏覽。`);
     return;
   }
   for (const h of hits.slice(0, limit)) console.log(line(cat, h.e, lang));
-  if (hits.length > limit) console.log(`… ${hits.length - limit} more. Narrow with --pack or raise --limit.`);
-  console.log(`\nNext: get <id> for the code and spec. Demo: ${SITE}#<id>`);
+  if (hits.length > limit) console.log(`… 還有 ${hits.length - limit} 個。可用 --pack 縮小範圍，或提高 --limit。`);
+  console.log(`\n下一步: 用 get <id> 取得程式碼與規格。範例: ${SITE}#<id>`);
 }
 
 async function cmdList(store, flags, lang) {
@@ -377,7 +396,7 @@ async function cmdList(store, flags, lang) {
     }
     for (const [label, n] of counts) console.log(`  - ${label} (${n})`);
   }
-  console.log(`\n${cat.elements.length} elements. Browse one pack with: list --pack <pack>`);
+  console.log(`\n共 ${cat.elements.length} 個元素。瀏覽單一個包: list --pack <包>`);
 }
 
 async function cmdGet(store, args, flags, lang) {
@@ -390,7 +409,7 @@ async function cmdGet(store, args, flags, lang) {
   }
   emit(files, flags.out);
   const kits = [...new Set(ids.map((id) => cat.elements.find((x) => x.id === id).pack))];
-  const note = `Needs kit: ${kits.join(', ')} — run "kit <pack>" once per pack before using this code.`;
+  const note = `需要 kit: ${kits.join(', ')} — 使用這段程式碼前，每個包各執行一次「kit <包>」。`;
   if (flags.out) console.log(note); else process.stdout.write(`\n// ${note}\n`);
 }
 
@@ -403,24 +422,24 @@ async function cmdPrompt(store, args, flags, lang) {
 }
 
 async function cmdKit(store, args, flags) {
-  if (args.length !== 1) throw new CliError(EXIT.USAGE, 'kit needs exactly one pack name, e.g. "kit motion".');
+  if (args.length !== 1) throw new CliError(EXIT.USAGE, 'kit 需要剛好一個包名，例如「kit motion」。');
   const cat = await store.loadCatalog();
   const pack = requirePack(cat, args[0]);
   emit([{ name: `kit-${pack}.js`, text: await store.file(`kit/${pack}.js`) }], flags.out);
 }
 
 async function cmdInfo(store) {
-  console.log(`motion-prompt skill ${VERSION}`);
-  console.log(`Gallery:        ${SITE}`);
-  console.log(`Sources (${store.origin}):`);
+  console.log(`motion-prompt 技能 ${VERSION}（繁體中文版，預設語言 ${DEFAULT_LANG}）`);
+  console.log(`圖庫:           ${repoRoot() ? `本機（${repoRoot()}），線上: ${SITE}` : SITE}`);
+  console.log(`資料來源（${{ default: '預設', 'local clone': '本機完整儲存庫', MOTION_PROMPT_BASE: 'MOTION_PROMPT_BASE' }[store.origin] || store.origin}）:`);
   for (const b of store.bases) console.log(`  ${b}`);
   let cat = null;
   let error = null;
   try { cat = await store.loadCatalog(); } catch (err) { error = err; }
-  console.log(`Cache folder:   ${store.remote ? store.cacheDir() : '(not used for local files)'}`);
-  if (!cat) { console.log('Catalog:        unavailable'); throw error; }
-  console.log(`In use:         ${store.fromCache ? `disk cache${store.usedBase ? '' : ' (no request made)'}` : store.usedBase}`);
-  console.log(`Catalog:        version ${cat.version ?? '?'} · ${cat.elements.length} elements`);
+  console.log(`快取資料夾:     ${store.remote ? store.cacheDir() : '（本機檔案不使用快取）'}`);
+  if (!cat) { console.log('目錄:           無法取得'); throw error; }
+  console.log(`使用中:         ${store.fromCache ? `磁碟快取${store.usedBase ? '' : '（未發出請求）'}` : store.usedBase}`);
+  console.log(`目錄:           版本 ${cat.version ?? '?'} · ${cat.elements.length} 個元素`);
   for (const p of packsOf(cat)) {
     const n = cat.elements.filter((e) => e.pack === packKey(p)).length;
     if (n) console.log(`  ${packKey(p)}: ${n}`);
@@ -498,6 +517,13 @@ function openBrowser(url) {
 }
 
 const PICK_TEXT = {
+  'zh-Hant': {
+    done: '已交給 AI', close: '這個畫面可以關掉了。請回到 AI 那裡，告訴它要怎麼使用這些項目。',
+    ignored: '目錄裡沒有的編號沒有送出: ', bad: '無法讀取選擇的內容',
+    badBody: '請回到圖庫，再按一次「交給 AI」。AI 還在等待。',
+    none: '選的編號都不在目錄裡', other: '這個接收網址屬於另一個請求',
+    otherBody: '請從 AI 開啟的圖庫按「交給 AI」送出。',
+  },
   ja: {
     done: 'AIに渡しました', close: 'この画面は閉じて大丈夫です。AIの画面に戻って、どう使うかを伝えてください。',
     ignored: 'カタログに無い番号は渡していません: ', bad: '選択を読み取れませんでした',
@@ -527,7 +553,7 @@ function waitForPick(server, { port, token, root, cat, flags, timeoutSec }) {
       fn();
     };
     const timer = setTimeout(() => finish(() => reject(new CliError(EXIT.TIMEOUT,
-      `motion-prompt: no selection arrived within ${timeoutSec} s, so nothing was picked.\nAsk the user whether they still want to pick, then run pick again.`))), timeoutSec * 1000);
+      `motion-prompt: ${timeoutSec} 秒內沒有收到選擇，所以什麼都沒選。\n請問使用者是否還要挑選，要的話再執行一次 pick。`))), timeoutSec * 1000);
 
     server.on('request', (req, res) => {
       const host = String(req.headers.host || '').toLowerCase();
@@ -537,7 +563,7 @@ function waitForPick(server, { port, token, root, cat, flags, timeoutSec }) {
       try { url = new URL(req.url, origin); } catch { return send(res, 400, 'Bad request'); }
       const q = url.searchParams;
       if (url.pathname === '/' && q.has('t')) {
-        const lang = flags.lang || (q.get('lang') === 'ja' ? 'ja' : q.get('lang') === 'en' ? 'en' : 'en');
+        const lang = flags.lang || (LANGS.includes(q.get('lang')) ? q.get('lang') : DEFAULT_LANG);
         const T = PICK_TEXT[lang];
         const given = Buffer.from(String(q.get('t')));
         const want = Buffer.from(token);
@@ -547,7 +573,7 @@ function waitForPick(server, { port, token, root, cat, flags, timeoutSec }) {
         if (req.method !== 'GET') return send(res, 405, 'Method not allowed', { Allow: 'GET' });
         const raw = String(q.get('ids') || '');
         if (!/^\d{3}(,\d{3})*$/.test(raw)) {
-          process.stderr.write(`motion-prompt: refused a selection with malformed ids (${JSON.stringify(raw.slice(0, 80))}); still waiting.\n`);
+          process.stderr.write(`motion-prompt: 收到格式錯誤的編號（${JSON.stringify(raw.slice(0, 80))}），已拒絕，繼續等待。\n`);
           return send(res, 400, page(lang, T.bad, `<p>${esc(T.badBody)}</p>`));
         }
         const ids = [...new Set(raw.split(','))];
@@ -555,7 +581,7 @@ function waitForPick(server, { port, token, root, cat, flags, timeoutSec }) {
         const known = ids.filter((id) => cat.elements.some((e) => e.id === id));
         const unknown = ids.filter((id) => !known.includes(id));
         if (!known.length) {
-          process.stderr.write(`motion-prompt: refused a selection with no known ids (${unknown.join(', ')}); still waiting.\n`);
+          process.stderr.write(`motion-prompt: 收到的編號都不在目錄裡（${unknown.join(', ')}），已拒絕，繼續等待。\n`);
           return send(res, 400, page(lang, T.none, `<p>${esc(T.badBody)}</p>`));
         }
         const note = String(q.get('note') || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, NOTE_MAX);
@@ -574,35 +600,52 @@ function waitForPick(server, { port, token, root, cat, flags, timeoutSec }) {
   });
 }
 
+const PICK_OUT = {
+  'zh-Hant': {
+    intro: (n) => `使用者在 Motion Prompt 圖庫依序選了以下 ${n} 個元素。`, note: '使用者的備註', none: '（無）',
+    meaning: '它是什麼', ask: '對 AI 的說法範例', spec: '規格', demo: '範例', ignored: '已略過（不在目錄裡）',
+    next: (ids, packs) => `下一步: 只用這些元素，不多也不少。執行「get ${ids}」取得程式碼（一次最多 ${MAX_GET} 個），並對每個包各執行一次「kit <包>」: ${packs}。`,
+  },
+  en: {
+    intro: (n) => `The user picked ${n} element${n === 1 ? '' : 's'} in the Motion Prompt gallery, in this order.`, note: 'Note from the user', none: '(none)',
+    meaning: 'Meaning', ask: 'How to ask', spec: 'Spec', demo: 'Demo', ignored: 'Ignored (not in the catalog)',
+    next: (ids, packs) => `Next: use exactly these elements, no more and no fewer. Run "get ${ids}" for the code (at most ${MAX_GET} ids per call) and "kit <pack>" once for each of: ${packs}.`,
+  },
+};
+
 function printPick(cat, { ids, unknown, note, lang }) {
-  const other = lang === 'ja' ? 'en' : 'ja';
-  const out = [`The user picked ${ids.length} element${ids.length === 1 ? '' : 's'} in the Motion Prompt gallery, in this order.`];
-  out.push(note ? `Note from the user: ${note}` : 'Note from the user: (none)');
+  const T = PICK_OUT[lang] || PICK_OUT.en;
+  const other = lang === 'en' ? 'ja' : 'en';
+  const out = [T.intro(ids.length)];
+  out.push(`${T.note}: ${note || T.none}`);
   out.push('');
   ids.forEach((id, i) => {
     const e = cat.elements.find((x) => x.id === id);
     const name = tx(e.name, lang);
     const alt = tx(e.name, other);
     out.push(`${i + 1}. #${e.id}  ${name}${alt && alt !== name ? ` / ${alt}` : ''}  [${e.pack} / ${categoryLabel(cat, e, lang).label}]`);
-    if (e.meaning) out.push(`   Meaning: ${tx(e.meaning, lang)}`);
-    if (e.ask) out.push(`   How to ask: ${tx(e.ask, lang)}`);
+    if (e.meaning) out.push(`   ${T.meaning}: ${tx(e.meaning, lang)}`);
+    if (e.ask) out.push(`   ${T.ask}: ${tx(e.ask, lang)}`);
     const spec = e.spec ? (Array.isArray(e.spec) ? e.spec : e.spec[lang] || e.spec.en || []) : [];
-    if (spec.length) { out.push('   Spec:'); for (const s of spec) out.push(`   - ${s}`); }
-    out.push(`   Demo: ${demoUrl(e.id)}`);
+    if (spec.length) { out.push(`   ${T.spec}:`); for (const s of spec) out.push(`   - ${s}`); }
+    out.push(`   ${T.demo}: ${demoUrl(e.id)}`);
     out.push('');
   });
-  if (unknown.length) out.push(`Ignored (not in the catalog): ${unknown.map((u) => `#${u}`).join(', ')}`, '');
+  if (unknown.length) out.push(`${T.ignored}: ${unknown.map((u) => `#${u}`).join(', ')}`, '');
   const packs = [...new Set(ids.map((id) => cat.elements.find((x) => x.id === id).pack))];
-  out.push(`Next: use exactly these elements, no more and no fewer. Run "get ${ids.join(' ')}" for the code (at most ${MAX_GET} ids per call) and "kit <pack>" once for each of: ${packs.join(', ')}.`);
+  out.push(T.next(ids.join(' '), packs.join(', ')));
   process.stdout.write(`${out.join('\n')}\n`);
 }
 
 async function cmdPick(store, args, flags) {
-  if (args.length) throw new CliError(EXIT.USAGE, 'pick takes no ids or words. Options: --pack <pack> --lang ja|en --timeout <seconds> --no-open --local');
+  if (args.length) throw new CliError(EXIT.USAGE, 'pick 不接受編號或關鍵字。選項: --pack <包> --lang zh-Hant|ja|en --timeout <秒數> --no-open --local --remote');
   const timeoutSec = flags.timeout === undefined ? PICK_TIMEOUT : Number(flags.timeout);
-  if (!Number.isFinite(timeoutSec) || timeoutSec < 1 || timeoutSec > 86400) throw new CliError(EXIT.USAGE, '--timeout must be a number of seconds between 1 and 86400.');
-  const root = flags.local ? repoRoot() : null;
-  if (flags.local && !root) throw new CliError(EXIT.USAGE, '--local needs a full clone of the repository (index.html and assets/ three folders above this script). Run pick without --local to use the public gallery.');
+  if (!Number.isFinite(timeoutSec) || timeoutSec < 1 || timeoutSec > 86400) throw new CliError(EXIT.USAGE, '--timeout 必須是 1 到 86400 之間的秒數。');
+  if (flags.local && flags.remote) throw new CliError(EXIT.USAGE, '--local 和 --remote 只能擇一。');
+  // With a full copy of the repository next to this script (a Claude Code plugin install or a git clone), serve the
+  // gallery from it: that needs no hosted site and always matches the local data. --remote uses the hosted gallery.
+  const root = flags.remote ? null : repoRoot();
+  if (flags.local && !root) throw new CliError(EXIT.USAGE, '--local 需要完整的儲存庫（這支腳本往上三層要有 index.html 和 assets/）。不加 --local 就會使用線上圖庫。');
   const cat = await store.loadCatalog(); // fail before opening anything if there is no data
   const pack = flags.pack ? requirePack(cat, flags.pack) : null;
 
@@ -617,11 +660,11 @@ async function cmdPick(store, args, flags) {
   const galleryUrl = `${root ? `${origin}/` : SITE}?${q}`;
   const waiting = waitForPick(server, { port, token, root, cat, flags, timeoutSec });
 
-  console.log(`Gallery: ${galleryUrl}`);
-  if (flags['no-open']) console.log('Not opened (--no-open). Open this URL in a browser, or give it to the user to open.');
-  else if (await openBrowser(galleryUrl)) console.log('Opened in the default browser. If no browser window appeared, open the URL above yourself.');
-  else console.log('Could not open a browser from here. Open the URL above in a browser, or give it to the user to open.');
-  console.log(`Waiting for the user to pick and press "Send to AI" (up to ${timeoutSec} s)…\n`);
+  console.log(`圖庫: ${galleryUrl}`);
+  if (flags['no-open']) console.log('沒有自動開啟（--no-open）。請用瀏覽器打開這個網址，或交給使用者打開。');
+  else if (await openBrowser(galleryUrl)) console.log('已在預設瀏覽器開啟。如果沒有出現瀏覽器視窗，請自行打開上面的網址。');
+  else console.log('無法從這裡開啟瀏覽器。請用瀏覽器打開上面的網址，或交給使用者打開。');
+  console.log(`等待使用者挑選並按下「交給 AI」（最多 ${timeoutSec} 秒）…\n`);
 
   printPick(cat, await waiting);
 }
@@ -632,8 +675,13 @@ async function main() {
   const { flags, command, args } = parseArgs(process.argv.slice(2));
   if (flags.version) { console.log(VERSION); return; }
   if (flags.help || !command || command === 'help') { console.log(HELP); return; }
-  if (flags.lang && !['ja', 'en'].includes(flags.lang)) throw new CliError(EXIT.USAGE, '--lang must be ja or en.');
-  const lang = flags.lang || (command === 'search' && HAS_JA.test(args.join(' ')) ? 'ja' : 'en');
+  if (flags.lang) {
+    const wanted = LANG_ALIAS[String(flags.lang).toLowerCase()];
+    if (!wanted) throw new CliError(EXIT.USAGE, '--lang 必須是 zh-Hant、ja 或 en。');
+    flags.lang = wanted;
+  }
+  const words = command === 'search' ? args.join(' ') : '';
+  const lang = flags.lang || (HAS_KANA.test(words) ? 'ja' : DEFAULT_LANG);
   const store = new Store({ refresh: flags.refresh });
   switch (command) {
     case 'search': return cmdSearch(store, args, flags, lang);
@@ -643,12 +691,12 @@ async function main() {
     case 'kit': return cmdKit(store, args, flags);
     case 'info': return cmdInfo(store);
     case 'pick': return cmdPick(store, args, flags);
-    default: throw new CliError(EXIT.USAGE, `Unknown command "${command}". Run with --help.`);
+    default: throw new CliError(EXIT.USAGE, `不認得的指令「${command}」。請用 --help 查看用法。`);
   }
 }
 
 main().catch((err) => {
   if (err instanceof CliError) { process.stderr.write(`${err.message}\n`); process.exitCode = err.code; return; }
-  process.stderr.write(`motion-prompt: unexpected error: ${err && err.stack ? err.stack : err}\n`);
+  process.stderr.write(`motion-prompt: 發生非預期的錯誤: ${err && err.stack ? err.stack : err}\n`);
   process.exitCode = 1;
 });

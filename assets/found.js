@@ -10,6 +10,39 @@
   var WIDGETS = 'https://platform.twitter.com/widgets.js';
 
   var I18N = {
+    'zh-Hant': {
+      title: '找到的案例｜Motion Prompt',
+      skip: '跳到案例列表', navLabel: '網站導覽', navGallery: '圖庫', navFound: '案例', langLabel: '語言',
+      themeToDark: '切換為深色模式', themeToLight: '切換為淺色模式',
+      eyebrow: '我們找到的案例',
+      h1: '用名稱和範例，建立共同語言的人們',
+      lead: '這些貼文的作者，把請 AI 做事時可以用的名稱，連同會動的範例或速查表一起整理公開。領域、語言和外觀各不相同。我們只挑選附有作者自製範例的貼文；貼文的內容與權利屬於各作者。',
+      leadNote: '列在這裡，不代表作者支持本網站。介紹文字由本網站撰寫。',
+      noteH: '關於嵌入內容',
+      noteP: '本頁以 X（前身為 Twitter）的嵌入方式顯示每則貼文。開啟後會從 X 的伺服器載入，並使用 X 的 Cookie。X 可能會記錄這次瀏覽並用於廣告。載入時，我們會加上要求 X 不要用於個人化的設定（dnt）。',
+      notePrivacy: 'X 隱私權政策', noteCookies: '關於 X 的 Cookie',
+      listH: '案例列表', loadListFailed: '無法載入列表。',
+      count: '{n} 則',
+      postLang: { ja: '日語', en: '英語', 'zh-Hant': '繁體中文' },
+      postLangLabel: '貼文語言：{l}',
+      viewOnX: '在 X 上查看',
+      viewOnXLabel: '在 X 上查看 {a} 的貼文',
+      loading: '載入中…',
+      gone: '無法顯示這則貼文（可能已被刪除）。',
+      failed: '無法從 X 載入，可能被廣告封鎖工具等擋下了。仍可從「在 X 上查看」開啟。',
+      shown: '已顯示 {a} 的貼文',
+      moreH: '歡迎提供案例',
+      recH: '推薦貼文（也歡迎自薦）',
+      recP: '如果看到有人把名稱附上範例公開的貼文，請透過 GitHub 的 Issue 告訴我們，自己的貼文也可以。我們只放嵌入內容和連結，不會把圖片或影片複製到本網站。',
+      recLink: '推薦案例（GitHub Issue）',
+      rmH: '希望移除時',
+      rmP: '如果想移除自己的貼文，或介紹文字有誤，請透過 Issue 表單提出。確認後，我們會盡快移除。',
+      rmLink: '申請刪除或更正（GitHub Issue）',
+      author: '作者', authorName: '大滝昇平 Shohei Ohtaki',
+      whyLink: '為什麼做這個', makeLink: '用自己的領域、自己的語言來做', addLink: '加入你所屬領域的名稱', listLink: '名稱一覽（GitHub）',
+      removeP1: '如需刪除或更正刊登內容，請透過', removeLink: 'GitHub 的 Issue 表單', removeP2: '提出。確認後會盡快處理。',
+      thanks1: '這種排列動態範例、複製提示詞就能用的形式，是受到', thanks2: '的啟發。謝謝！',
+    },
     ja: {
       title: '見つけた事例｜Motion Prompt',
       skip: '事例の一覧へ移動', navLabel: 'サイト内', navGallery: '見本', navFound: '事例', langLabel: '言語',
@@ -23,7 +56,7 @@
       notePrivacy: 'Xのプライバシーポリシー', noteCookies: 'XのCookieについて',
       listH: '事例の一覧', loadListFailed: '一覧を読み込めませんでした。',
       count: '{n}件',
-      postLang: { ja: '日本語', en: '英語' },
+      postLang: { ja: '日本語', en: '英語', 'zh-Hant': '繁体字中国語' },
       postLangLabel: 'ポストの言語: {l}',
       viewOnX: 'Xで見る',
       viewOnXLabel: '{a} のポストをXで見る',
@@ -56,7 +89,7 @@
       notePrivacy: 'X Privacy Policy', noteCookies: 'How X uses cookies',
       listH: 'Examples', loadListFailed: 'Could not load the list.',
       count: '{n} posts',
-      postLang: { ja: 'Japanese', en: 'English' },
+      postLang: { ja: 'Japanese', en: 'English', 'zh-Hant': 'Traditional Chinese' },
       postLangLabel: 'Post language: {l}',
       viewOnX: 'View on X',
       viewOnXLabel: 'View the post by {a} on X',
@@ -84,16 +117,29 @@
     del: function (k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
   };
   var darkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : { matches: false };
-  var state = { lang: root.lang === 'en' ? 'en' : 'ja', data: null };
+  // zh-Hant is the default; ja and en are kept. Anything else falls back to zh-Hant.
+  function normLang(l) {
+    l = String(l || '').toLowerCase();
+    return l === 'ja' ? 'ja' : l === 'en' ? 'en' : 'zh-Hant';
+  }
+  var state = { lang: normLang(root.lang), data: null };
   var cards = [];   // { item, el, box, status, shown, token }
 
   function t(key, vars) {
-    var s = I18N[state.lang][key];
-    if (s == null) s = I18N.ja[key];
+    var s = (I18N[state.lang] || {})[key];
+    if (s == null) s = I18N['zh-Hant'][key];
+    if (s == null) s = I18N.en[key];
     if (s == null) s = key;
     if (vars && typeof s === 'string') Object.keys(vars).forEach(function (k) { s = s.split('{' + k + '}').join(vars[k]); });
     return s;
   }
+  // Pick the current language from a { 'zh-Hant', ja, en } object: the current one, then en, then ja, then zh-Hant.
+  function pick(x) {
+    if (!x) return '';
+    return x[state.lang] || x.en || x.ja || x['zh-Hant'] || '';
+  }
+  // X embeds take their own language codes (Traditional Chinese is 'zh-tw').
+  function xLang() { return state.lang === 'zh-Hant' ? 'zh-tw' : state.lang; }
   function h(tag, attrs, kids) {
     var n = document.createElement(tag);
     if (attrs) Object.keys(attrs).forEach(function (k) {
@@ -148,7 +194,7 @@
     return loadWidgets().then(function (tw) {
       if (c.token !== token) return;
       return tw.widgets.createTweet(c.item.id, c.box, {
-        lang: state.lang, theme: isDark() ? 'dark' : 'light', dnt: true, conversation: 'none', align: 'center',
+        lang: xLang(), theme: isDark() ? 'dark' : 'light', dnt: true, conversation: 'none', align: 'center',
       }).then(function (el) {
         if (c.token !== token) return;
         if (el) { setStatus(c, null); c.el.classList.remove('is-gone'); }
@@ -187,7 +233,7 @@
             h('a', { class: 'ex-author', href: 'https://x.com/' + encodeURIComponent(handle), rel: 'noopener', text: it.author }),
             h('span', { class: 'ex-lang', title: t('postLangLabel', { l: langName }), 'aria-label': t('postLangLabel', { l: langName }), text: String(it.lang).toUpperCase() }),
           ]),
-          h('p', { class: 'ex-intro', text: (it.intro && (it.intro[state.lang] || it.intro.en || it.intro.ja)) || '' }),
+          h('p', { class: 'ex-intro', text: pick(it.intro) }),
           h('div', { class: 'ex-act' }, [link]),
           status,
           box,
@@ -198,7 +244,7 @@
       });
       wrap.appendChild(h('section', { class: 'ex-theme', 'aria-labelledby': hid }, [
         h('div', { class: 'pack-h' }, [
-          h('h3', { id: hid, text: th[state.lang] || th.en }),
+          h('h3', { id: hid, text: pick(th) }),
           h('span', { text: t('count', { n: items.length }) }),
         ]),
         list,
@@ -235,13 +281,14 @@
       });
     });
     $$('[data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-lang') === lang ? 'true' : 'false'); });
-    $$('[data-href-' + lang + ']').forEach(function (a) { a.href = a.getAttribute('data-href-' + lang); });
+    var hrefAttr = 'data-href-' + lang.toLowerCase();
+    $$('[' + hrefAttr + ']').forEach(function (a) { a.href = a.getAttribute(hrefAttr); });
     applyTheme();
   }
   function applyTheme() { $('#theme').setAttribute('aria-label', t(isDark() ? 'themeToLight' : 'themeToDark')); }
   $$('[data-lang]').forEach(function (b) {
     b.addEventListener('click', function () {
-      var lang = b.getAttribute('data-lang');
+      var lang = normLang(b.getAttribute('data-lang'));
       if (lang === state.lang) return;
       state.lang = lang;
       store.set('mp-lang', lang);

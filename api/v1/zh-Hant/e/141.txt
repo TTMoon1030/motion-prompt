@@ -1,0 +1,31 @@
+// Motion Prompt #141 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#141
+//
+// 馬賽克轉場 / Pixelate
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 21 · 分類: 轉場與吸睛效果
+// 會發生什麼: 畫面變成越來越粗的色塊，在最粗時切換，然後再變清晰。
+// 動態規格:
+//   - 草原畫面 → 城市畫面 → 草原，各 2.35 秒。在 0.2–1.9 秒（1.7 秒）內，馬賽克格子大小依 1、2、3、4、6、8、11、15、20、27、36 px 逐級放大再縮小（中間點 1.05 秒最粗）。
+//   - 前半顯示舊畫面，後半顯示新畫面；在最粗的那一級替換。
+//   - 作法：開啟影像平滑把畫面縮小到「寬度 ÷ 格子大小」，再關閉影像平滑放大回原尺寸。
+// 使用時機: 用在遊戲風、復古或數位感的場景轉換，或在切換時把某樣東西打上馬賽克。
+// 標籤: pixelate, mosaic, pixel, transition, retro, 8-bit, scene-change
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#141
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 21
+// 21 ピクセレート（画面がだんだん粗いモザイクになり、いちばん粗いところで切り替わって細かく戻る）
+const SMC = mkCanvas(CW, CH), SMK = SMC.getContext('2d');
+const BLV = [1, 2, 3, 4, 6, 8, 11, 15, 20, 27, 36];
+CELLS[20] = abCell((k, w, h, u, a, b) => {
+  const S = [scField, scCity], p = P(u, TA - 0.3, TB + 0.4), tri = 1 - Math.abs(2 * p - 1), bs = BLV[Math.round(tri * (BLV.length - 1))];
+  const scr = p < 0.5 ? a : b;
+  if (bs <= 1) return S[scr](k, w, h);
+  TK.setTransform(1, 0, 0, 1, 0, 0); TK.globalCompositeOperation = 'source-over'; TK.clearRect(0, 0, w, h); S[scr](TK, w, h);
+  const sw = Math.ceil(w / bs), sh = Math.ceil(h / bs);
+  SMK.setTransform(1, 0, 0, 1, 0, 0); SMK.clearRect(0, 0, CW, CH); SMK.imageSmoothingEnabled = true; SMK.imageSmoothingQuality = 'high'; SMK.drawImage(TMP, 0, 0, sw, sh);
+  k.imageSmoothingEnabled = false; k.drawImage(SMC, 0, 0, sw, sh, 0, 0, sw * bs, sh * bs); k.imageSmoothingEnabled = true;
+});

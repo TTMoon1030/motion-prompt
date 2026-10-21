@@ -1,0 +1,35 @@
+// Motion Prompt #083 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#083
+//
+// 滑鼠跟隨效果 / Cursor follower
+// 包: lp (Landing Page 與網站效果) · element 11 · 分類: 滑鼠與點擊的互動
+// 會發生什麼: 游標在頁面上移動時，一個橘紅色圓形稍微落後地跟在後面。
+// 動態規格:
+//   - 游標路徑：x = 255 + 175·sin(2πt/4.8)，y = 86 + 46·sin(4πt/4.8)（橫躺的 8 字形，每 4.8 秒繞一圈）。
+//   - 圓形：半徑 17，橘紅色，不透明度 0.88，畫在游標下層。
+//   - 跟隨規則：每一影格（60 fps）移動剩餘距離的 12%（x += (游標 x − x) × 0.12）。
+//   - 箭頭游標保持顯示。
+// 使用時機: 想在品牌網站或作品集網站增加互動感與趣味時。
+// 標籤: cursor, custom-cursor, cursor-follower, mouse-follow, lerp, trail, interaction
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#083
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 11
+// 11 マウスストーカー（カーソルのあとを、丸が少し遅れて追いかける）
+CELLS[10] = (k, w, h, u) => {
+  frame(k);
+  const cur = t => [255 + 175 * Math.sin(2 * Math.PI * t / CYC), 86 + 46 * Math.sin(4 * Math.PI * t / CYC)];
+  // 毎フレーム（60fps）残りの距離の 12% ずつ近づく
+  let t = u - 2, [fx, fy] = cur(t);
+  for (let i = 0; i < 120; i++) { t += 1 / 60; const [tx, ty] = cur(t); fx += (tx - fx) * 0.12; fy += (ty - fy) * 0.12; }
+  view(k, () => {
+    txt(k, 'CREATIVE STUDIO', VW / 2, 74, `800 34px ${EN}`, C.ink, 'center', 'alphabetic', '3px');
+    bars(k, VW / 2 - 120, 96, 240, 2, C.faint, 6, 12, 0.7);
+    btn(k, VW / 2 - 50, 128, 100, 24, '作品を見る', C.ink);
+    k.fillStyle = C.acc; k.globalAlpha = 0.88; k.beginPath(); k.arc(fx, fy, 17, 0, 7); k.fill(); k.globalAlpha = 1;
+    const [cx, cy] = cur(u); cursor(k, cx, cy);
+  });
+};

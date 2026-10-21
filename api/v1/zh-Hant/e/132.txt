@@ -1,0 +1,32 @@
+// Motion Prompt #132 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#132
+//
+// 可變字型動畫 / Variable font animation
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 12 · 分類: 文字與圖形效果
+// 會發生什麼: 同一個單字的粗細從細平順變到極粗再變回來，下方滑桿顯示目前的字重。
+// 動態規格:
+//   - 「MOTION」（112 px，system-ui，字距 2 px）。字重每 4.7 秒來回兩次：v = 0.5 − 0.5·cos(2π × 2 × 時間 ÷ 4.7)，兩端會平順減速。
+//   - 字重 = round(100 + 800v)，範圍 100 到 900，直接設為字型的字重。
+//   - 下方有滑桿（x = 112→427，y = 180），左邊標「細」、右邊標「粗」。滑鈕（黃色，半徑 14）隨 v 移動，上方顯示目前的字重數字。
+// 使用時機: 用在標題、Logo 或單一關鍵字，透過字形本身表現音量或情緒的強弱。
+// 標籤: variable-font, font-weight, typography, text, weight, kinetic-type
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#132
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 12
+// 12 可変フォントアニメーション（同じ単語の太さが、細→極太→細となめらかに変わる）
+CELLS[11] = (k, w, h, u) => {
+  stage(k);
+  const v = 0.5 - 0.5 * Math.cos(2 * Math.PI * 2 * u / CYC), wt = Math.round(100 + 800 * v);
+  txt(k, 'MOTION', w / 2, 80, `${wt} 112px system-ui`, '#fff', 'center', 'middle', '2px');
+  const x0 = 112, x1 = w - 112, y = 180, kx = x0 + (x1 - x0) * v;
+  txt(k, '細', x0 - 34, y + 1, `300 30px ${JP}`, C.dim, 'center', 'middle');
+  txt(k, '太', x1 + 34, y + 1, `900 30px ${JP}`, C.dim, 'center', 'middle');
+  k.fillStyle = C.navy3; rr(k, x0, y - 5, x1 - x0, 10, 5); k.fill();
+  k.fillStyle = C.blue; rr(k, x0, y - 5, Math.max(10, kx - x0), 10, 5); k.fill();
+  k.fillStyle = C.yel; k.beginPath(); k.arc(kx, y, 14, 0, 7); k.fill();
+  txt(k, String(wt), kx, y - 30, `800 24px ${DISP}`, C.yel, 'center', 'middle');
+};

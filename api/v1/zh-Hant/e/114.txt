@@ -1,0 +1,28 @@
+// Motion Prompt #114 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#114
+//
+// Low Key（低調） / Low-key
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 18 · 分類: 調色與風格
+// 會發生什麼: 畫面大半沉入黑暗，太陽也消失，只有從側面受光的胸像右緣亮著浮現出來；直方圖的峰移到最左端。
+// 動態規格:
+//   - 場景 3：左側為胸像（頭部中心 x 140, y 82，半徑 28 px），右側為山丘、房子、樹與太陽（x 432, y 54，半徑 15 px）。
+//   - 顏色：天空 #FAF9F7 → #2B2D33，山丘 → #313339 與 #36383E，地面 → #24252A，人物 → #25272E；太陽與光環變成與天空同色而消失
+//   - 胸像右緣的受光面保留，#FFC75A → #FFB547
+//   - 直方圖：峰的中心 0.56 → 0.14，寬度 0.2 → 0.08
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想營造高級感、緊張感或神祕氛圍時。
+// 標籤: low-key, low key, dark, black background, moody, dramatic, chiaroscuro
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#114
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 18
+// ローキー: 画面の大半が暗く沈み、横からの光が当たる縁だけが浮かぶ
+CELLS[17] = cell((k, u) => {
+  const a = env(u);
+  const LOW = Object.assign({}, DARK, { sun: DARK.sky, glow: DARK.sky, person: '#25272E', lit: '#FFB547' });
+  stageLand(k, pal(BASE, LOW, a));
+  histo(k, lerp(0.56, 0.14, a), lerp(0.2, 0.08, a));
+});

@@ -2,6 +2,8 @@
 
 # Packs
 
+Languages: [繁體中文](README.zh-Hant.md)
+
 A pack is one field's set of names. Each list below is readable here on GitHub; the gallery shows the same names moving.
 
 | Numbers | Pack | Names | Lists |
@@ -11,6 +13,6 @@ A pack is one field's set of names. Each list below is readable here on GitHub; 
 | 049–072 | `ui` — UI component names | 24 | [English](ui/README.md) · [日本語](ui/README.ja.md) · [繁體中文](ui/README.zh-Hant.md) |
 | 073–096 | `lp` — Landing page & web effects | 24 | [English](lp/README.md) · [日本語](lp/README.ja.md) · [繁體中文](lp/README.zh-Hant.md) |
 | 097–120 | `photo` — Photo looks, lighting & styles | 24 | [English](photo/README.md) · [日本語](photo/README.ja.md) · [繁體中文](photo/README.zh-Hant.md) |
-| 121–144 | `motion2` — Motion graphics moves, part 2 | 24 | [English](motion2/README.md) · [日本語](motion2/README.ja.md) |
+| 121–144 | `motion2` — Motion graphics moves, part 2 | 24 | [English](motion2/README.md) · [日本語](motion2/README.ja.md) · [繁體中文](motion2/README.zh-Hant.md) |
 
 To add a pack for your field, or a language to an existing pack, see [CONTRIBUTING.md](../CONTRIBUTING.md).

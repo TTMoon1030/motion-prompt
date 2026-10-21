@@ -29,6 +29,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+:root:lang(zh-Hant) { --font: "SF Pro Display", "Helvetica Neue", "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", system-ui, sans-serif; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--top-h) + 16px); }
 @media (hover: hover) and (pointer: fine) { html { scrollbar-gutter: stable; } }
 html.modal-open { overflow: hidden; }
@@ -59,7 +60,7 @@ button { cursor: pointer; }
 .top-link { font-size: 14px; text-decoration: none; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
 .top-link:hover { background: var(--surface); color: var(--ink); }
 .seg { display: flex; border: 1px solid var(--line-strong); border-radius: 7px; overflow: hidden; margin-left: 6px; }
-.seg-b { border: 0; background: transparent; padding: 5px 9px; font: 600 12px/1.4 var(--mono); letter-spacing: .04em; color: var(--muted); }
+.seg-b { border: 0; background: transparent; padding: 5px 9px; font: 600 12px/1.4 var(--mono); letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
 .seg-b[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .seg-b:focus-visible { outline-offset: -2px; }
 .icon-b { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--ink); flex: none; }

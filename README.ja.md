@@ -1,6 +1,8 @@
 # Motion Prompt
 
-[English](README.md) | **日本語**
+[English](README.md) | **日本語** | [繁體中文](README.zh-Hant.md)
+
+> **繁体字中国語版。** このリポジトリは [showheyohtaki/motion-prompt](https://github.com/showheyohtaki/motion-prompt) のフォークで、名前・仕様のすべてと、ギャラリー・スキル・CLI が繁体字中国語（zh-Hant、既定の言語）にも対応しています。導入は `npx skills add TTMoon1030/motion-prompt` か `/plugin marketplace add TTMoon1030/motion-prompt`、ギャラリーは https://ttmoon1030.github.io/motion-prompt/ です。以下は元の日本語の README です。
 
 AIに何かを作ってもらうときに使う「名前」のライブラリです。名前の1つずつに、動く見本・一言の意味・AIへの頼み方の例が付いています。いま入っているのは、モーショングラフィックスの動き（`motion`）、カメラワーク（`camera`）、UIパーツの名前（`ui`）、LP・Webサイトの演出（`lp`）、写真の表現・光と画風（`photo`）、モーショングラフィックスの演出 第2弾（`motion2`）の6つで、それぞれ24個、合わせて144個です。同じような名前の見本を、自分の分野・自分の言語で作るためのプロンプトも入っています。
 

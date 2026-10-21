@@ -1,0 +1,31 @@
+// Motion Prompt #137 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#137
+//
+// 推移轉場 / Push transition
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 17 · 分類: 轉場與吸睛效果
+// 會發生什麼: 下一個畫面從側邊滑入，連帶把目前的畫面一起推出去。
+// 動態規格:
+//   - 海景畫面 → 山景畫面 → 海景畫面，各 2.35 秒。每段的 0.45–1.6 秒（1.15 秒）進行切換，easeInOut（三次）。
+//   - 兩個畫面保持相連，一起移動整個畫面寬度（539 px）；不重疊，也不淡化。
+//   - 方向：海 → 山往左移（下一個畫面從右邊進來），山 → 海往右移。
+//   - 兩個畫面的接縫有一條深藍色線（寬 6）。
+// 使用時機: 依序切換投影片、照片或步驟時使用，讓轉換有連貫、往前推進的感覺。
+// 標籤: push, push-transition, slide, transition, scene-change, carousel
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#137
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 17
+// 17 プッシュ（次の画面が横から入ってきて、前の画面を一緒に押し出す）
+const SC17 = [scSea, scMtn];
+CELLS[16] = abCell((k, w, h, u, a, b) => {
+  const p = eIO(P(u, TA - 0.05, TB + 0.1)), dir = a === 0 ? -1 : 1;
+  if (p <= 0) return SC17[a](k, w, h);
+  if (p >= 1) return SC17[b](k, w, h);
+  k.save(); k.translate(dir * p * w, 0); SC17[a](k, w, h); k.restore();
+  k.save(); k.translate(dir * (p - 1) * w, 0); SC17[b](k, w, h); k.restore();
+  const ex = dir < 0 ? w * (1 - p) : w * p;
+  k.fillStyle = C.navy; k.fillRect(ex - 3, 0, 6, h);
+});

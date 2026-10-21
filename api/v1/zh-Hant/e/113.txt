@@ -1,0 +1,31 @@
+// Motion Prompt #113 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#113
+//
+// High Key（高調） / High-key
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 17 · 分類: 調色與風格
+// 會發生什麼: 風景與人物都變成接近白色的明亮色彩，陰影非常淡，右下直方圖的峰移到最右端。
+// 動態規格:
+//   - 場景 3：左側為胸像（頭部中心 x 140, y 82，半徑 28 px），右側為山丘、房子、樹與太陽（x 432, y 54，半徑 15 px）。
+//   - 顏色：天空 #FAF9F7 → #FFFFFF，山丘 #EAEDF1 → #F5F6F8，人物 #4D5A75 → #B9C0CE，陰影 #33405A → #A6AEBF，太陽 #F5A524 → #FFD889
+//   - 直方圖（96×46 px，20 條）：峰的中心 0.56 → 0.85，寬度 0.2 → 0.09
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 用於想呈現潔淨、輕盈、溫柔感的商品或人物照片。
+// 標籤: high-key, high key, bright, white background, airy, low contrast
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#113
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 17
+// ハイキー: 明るい色だけになり、影はごく薄く、明るさの山が右端へ寄る
+CELLS[16] = cell((k, u) => {
+  const a = env(u);
+  const HIGH = {
+    sky: '#FFFFFF', sky2: '#FFFFFF', far: '#F5F6F8', mid: '#EEF0F3', ground: '#FBFBFA', ground2: '#F3F3F1', mark: '#FFFFFF', cast: '#F3F3F1',
+    bld: '#FBFBFA', edge: '#E9E9E7', win: '#F2F2F0', winOff: '#F2F2F0', tree: '#F0F0EE', trunk: '#E5E5E3', post: '#DADAD8', bulb: '#E5E5E3',
+    person: '#B9C0CE', shade: '#A6AEBF', lit: '#FFE6AE', car: '#E4E7EC', glass: '#FFFFFF', tire: '#C5CAD3', sun: '#FFD889', glow: '#FFF3D8'
+  };
+  stageLand(k, pal(BASE, HIGH, a));
+  histo(k, lerp(0.56, 0.85, a), lerp(0.2, 0.09, a));
+});

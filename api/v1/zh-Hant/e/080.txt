@@ -1,0 +1,42 @@
+// Motion Prompt #080 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#080
+//
+// 螢光筆動畫 / Highlighter animation
+// 包: lp (Landing Page 與網站效果) · element 08 · 分類: 捲動時的效果
+// 會發生什麼: 文案捲動進入畫面時，重點文字的下半部由左到右畫上黃色的螢光筆線條。
+// 動態規格:
+//   - 捲動量：0.35–1.0 秒 0→90 px，1.6–2.2 秒 90→180 px，3.3–4.4 秒 180→0（三次方 easeInOut）。
+//   - 兩行文案（20 px，粗體），位於頁面上 190 px 與 290 px 處，一開始都在畫面下方看不到。
+//   - 某一行的上緣越過觸發線（視窗高度的 80%，134 px）時，開始在該行重點文字下方畫線。
+//   - 線條：黃色 #FFE36B，高 11，位於文字偏下的位置（基線上方 8 px 到下方 3 px）。寬度 0 → 文字寬度，0.8 秒內由左往右（三次方 easeOut），畫在文字後面。
+//   - 離開畫面下緣的行，會在看不到的地方清除線條並重設。
+// 使用時機: 想在 Landing Page 文案中，讓最重要的一句話在被讀到的當下特別醒目時。
+// 標籤: highlighter, marker, text-highlight, emphasis, scroll-reveal, copy, underline
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#080
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 08
+// 08 マーカーアニメーション（大事な言葉が画面に入ると、蛍光ペンの線が左から引かれる）
+CELLS[7] = (k, w, h, u) => {
+  frame(k);
+  const SY = t => steps([[0.35, 0], [1.0, 90], [1.6, 90], [2.2, 180], [3.3, 180], [4.4, 0]], t), y = SY(u);
+  const LINE = VH * 0.8, DUR = 0.8, MARK = '#FFE36B', F = `800 20px ${JP}`;
+  const rows = [[190, ['毎日のごはんが', 'たった10分で', '作れる。']], [290, ['はじめてでも', '失敗しないレシピ', 'だけ。']]];
+  view(k, () => {
+    k.save(); k.translate(0, -y);
+    txt(k, '忙しい人のための', 70, 50, `700 14px ${JP}`, C.sub); txt(k, '台所の新しい相棒', 70, 80, `800 24px ${JP}`, C.ink);
+    bars(k, 70, 96, 330, 4, C.faint, 6, 12, 0.8);
+    for (const [base, parts] of rows) {
+      k.font = F; const ws = parts.map(s => k.measureText(s).width); let x = (VW - ws.reduce((a, b) => a + b, 0)) / 2;
+      const t0 = enteredAt(SY, base - 20, LINE, u), q = t0 === null ? 0 : eOut(P(u, t0, t0 + DUR));
+      if (q > 0) { k.fillStyle = MARK; k.fillRect(x + ws[0], base - 8, ws[1] * q, 11); }
+      parts.forEach((s, i) => { txt(k, s, x, base, F, i === 1 ? C.ink : '#4A5368'); x += ws[i]; });
+      bars(k, 110, base + 22, 291, 2, C.faint, 6, 12, 0.7);
+    }
+    k.restore();
+    sbar(k, y / 180, 0.5);
+  });
+};

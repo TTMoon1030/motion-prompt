@@ -1,0 +1,42 @@
+// Motion Prompt #086 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#086
+//
+// 底線動畫 / Underline animation
+// 包: lp (Landing Page 與網站效果) · element 14 · 分類: 滑鼠與點擊的互動
+// 會發生什麼: 游標所在的連結下方，一條橘紅色線從左邊延伸出來；游標離開時，線條往右邊縮短消失。
+// 動態規格:
+//   - 三個連結（20 px，粗體，間隔 56）。游標由左到右依序在每個連結上停留約 1 秒（判定範圍比文字左右各寬 6 px）。
+//   - 底線：橘紅色，粗 3，位於基線下方 8 px。
+//   - 滑鼠移入時，寬度 0→100%，從左端延伸，0.3 秒（三次方 easeOut）。
+//   - 移開時，左端在 0.3 秒內往右移動，線條從右邊離開（同 transform-origin 設在右側的 scaleX）。
+// 使用時機: 想在選單或內文連結上，低調地表示游標指向哪裡時。
+// 標籤: underline, hover, link, navigation, menu, text-link, scalex
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#086
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 14
+// 14 下線アニメーション（リンクにカーソルを乗せると下線が左から伸び、離れると右へ抜ける）
+CELLS[13] = (k, w, h, u) => {
+  frame(k);
+  const LINKS = ['サービス', '実績', '会社概要'], F = `800 20px ${JP}`, GAP = 56, LY = 84, DUR = 0.3;
+  const cur = t => path([[0, 120, 150], [0.45, 170, 80], [1.3, 186, 84], [1.55, 268, 80], [2.4, 282, 84], [2.65, 372, 80], [3.5, 390, 84], [3.95, 430, 150], [4.8, 120, 150]], t);
+  view(k, () => {
+    logo(k, 22, 28); bars(k, 90, 132, 331, 2, C.faint, 6, 12, 0.6);
+    k.font = F; const ws = LINKS.map(s => k.measureText(s).width); let x = (VW - ws.reduce((a, b) => a + b, 0) - GAP * (LINKS.length - 1)) / 2;
+    LINKS.forEach((s, i) => {
+      const x0 = x, x1 = x + ws[i], inside = t => { const [a, b] = cur(t); return a > x0 - 6 && a < x1 + 6 && b > LY - 22 && b < LY + 14; };
+      txt(k, s, x0, LY, F, C.ink);
+      // 最後に乗った・離れた時刻から 0.3秒（乗る: 左端から伸びる / 離れる: 左端から縮んで右へ抜ける）
+      const on = inside(u); let tc = null; for (let j = 0, t = u; j < 600; j++, t -= 1 / 120) if (inside(t - 1 / 120) !== on) { tc = t; break; }
+      if (tc !== null) {
+        const q = eOut(P(u, tc, tc + DUR)), a = on ? 0 : q, b = on ? q : 1;
+        if (b > a) { k.fillStyle = C.acc; k.fillRect(x0 + ws[i] * a, LY + 8, ws[i] * (b - a), 3); }
+      }
+      x += ws[i] + GAP;
+    });
+    const [cx, cy] = cur(u); cursor(k, cx, cy);
+  });
+};

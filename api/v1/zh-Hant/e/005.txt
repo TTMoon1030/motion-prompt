@@ -1,0 +1,38 @@
+// Motion Prompt #005 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#005
+//
+// Mask Reveal / Mask reveal
+// 包: motion (Motion Graphics 動態手法) · element 05 · 分類: 登場與文字動態
+// 會發生什麼: 以一條線為界，標題從看不見的邊界後方滑出來。
+// 動態規格:
+//   - 每 2.35 秒播放 1 次。分隔線（珊瑚色，380 × 6，y = 124）：在 0.1–0.5 秒從中央向左右延伸（easeInOut 3 次方），在 2.05–2.3 秒縮短消失
+//   - 上方文字（粗體 98 px，白色）：裁切在分隔線上方區域（y 8–119）內；在 0.35–1.0 秒從下方 120 px 處移到定位，easeOut（5 次方）
+//   - 下方文字（32 px，黃色）：裁切在分隔線下方區域（y 129–181）內；在 0.55–1.15 秒從上方 60 px 處移到定位，easeOut（5 次方）
+//   - 退場：上方文字在 1.7–2.05 秒往上移 150 px（backIn，s = 1.2，會先稍微往下沉）；下方文字在 1.75–2.05 秒往下移 70 px（easeIn 3 次方）
+//   - 透明度始終不變；文字只是移出裁切區域才看不見
+// 使用時機: 想讓標題或小標以俐落、沉穩的方式出現時使用。
+// 標籤: mask, reveal, clip, wipe, title, text, slide-up, headline
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#005
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 05
+// 05 マスクリビール（見えない枠＝線の向こうから、見出しがせり上がる）
+CELLS[4] = (k, w, h, u) => {
+  stage(k);
+  const T = CYC / 2, lu = mod(u, T), X = w / 2, LY = 124;
+  const lg = eIO(P(lu, 0.1, 0.5)) * (1 - eIO(P(lu, 2.05, 2.3)));
+  // 上の段：線の下から上へ
+  const up = (1 - eOut5(P(lu, 0.35, 1.0))) * 120 + backIn(P(lu, 1.7, 2.05), 1.2) * -150;
+  k.save(); k.beginPath(); k.rect(0, 8, w, LY - 8 - 5); k.clip();
+  txt(k, 'Hello!', X, LY - 14 + up, `800 98px ${DISP}`, '#fff', 'center', 'alphabetic', '1px');
+  k.restore();
+  // 下の段：線の上から下へ
+  const dn = (1 - eOut5(P(lu, 0.55, 1.15))) * -60 + eIn(P(lu, 1.75, 2.05)) * 70;
+  k.save(); k.beginPath(); k.rect(0, LY + 5, w, 52); k.clip();
+  txt(k, 'はじめまして', X, LY + 44 + dn, `700 32px ${JP}`, C.yel, 'center', 'alphabetic', '6px');
+  k.restore();
+  if (lg > 0.005) { k.fillStyle = C.coral; rr(k, X - 190 * lg, LY - 3, 380 * lg, 6, 3); k.fill(); }
+};

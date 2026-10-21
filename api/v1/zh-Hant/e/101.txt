@@ -1,0 +1,41 @@
+// Motion Prompt #101 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#101
+//
+// 林布蘭光 / Rembrandt lighting
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 05 · 分類: 打光方式與時段
+// 會發生什麼: 側方 45°、上方 45° 的光亮起，臉的右側沉入陰影，只在陰影側的臉頰留下一小塊倒三角形的亮光。
+// 動態規格:
+//   - 場景 1：地平線（y 150）前方是胸部以上的人物（頭部中心 x 270, y 78，半徑 29 px，不畫五官與頭髮）。背景轉為暗一階的場景（天空 #E7E5E1）
+//   - 頭部：x = 270 + 0.04·29 右側為陰影 #33405A，左側為受光 #FFC75A
+//   - 三角形亮光：(x 270+0.24R, y 78−0.12R)、(x 270+0.7R, y 78−0.12R)、(x 270+0.24R, y 78+0.5R)，R = 29（寬約 13 px、高約 18 px），與受光面之間隔著寬約 6 px 的陰影帶
+//   - 身體：中心 −0.45×56 px 以左受光，+0.3×56 px 以右為陰影；燈位圖中光在 45°，右上顯示「45° · ↑45°」
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想讓人像有繪畫般的厚重感與立體感、呈現古典風格時。
+// 標籤: rembrandt lighting, portrait lighting, triangle, 45 degree light, chiaroscuro, painterly
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#101
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 05
+// レンブラントライティング: 斜め45°・上からの光。影側の頬に三角形の光が残る
+CELLS[4] = cell((k, u) => {
+  const a = env(u), R = PR, W = torsoW(R);
+  stagePortrait(k, pal(BASE, DIM, a));
+  const lit = mixc(BASE.person, BASE.lit, a), sh = mixc(BASE.person, BASE.shade, a);
+  bust(k, PX, PY, R, BASE.person, kk => {
+    kk.fillStyle = lit; kk.beginPath(); kk.arc(PX, PY, R, 0, TAU); kk.fill();
+    kk.fillStyle = sh; kk.fillRect(PX + 0.04 * R, PY - R - 2, R * 2, R * 2 + 4);       // 鼻筋から右は影
+    kk.beginPath(); kk.arc(PX, PY, R, 0, TAU); kk.clip();
+    kk.fillStyle = lit; kk.beginPath();                                                   // 影側の頬に残る光の三角形
+    kk.moveTo(PX + 0.24 * R, PY - 0.12 * R); kk.lineTo(PX + 0.7 * R, PY - 0.12 * R); kk.lineTo(PX + 0.24 * R, PY + 0.5 * R); kk.closePath(); kk.fill();
+  });
+  bust(k, PX, PY, R, 'rgba(0,0,0,0)', kk => {
+    kk.fillStyle = 'rgba(0,0,0,0)';
+    torso(kk, PX, PY, R, PX - W, PX - 0.45 * W, lit);
+    torso(kk, PX, PY, R, PX + 0.3 * W, PX + W, sh);
+  });
+  plan(k, [[Math.PI / 4, a]]);
+  hud(k, '45° · ↑45°');
+});

@@ -1,0 +1,26 @@
+// Motion Prompt #138 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#138
+//
+// 百葉窗轉場 / Blinds transition
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 18 · 分類: 轉場與吸睛效果
+// 會發生什麼: 一排細長條之間的縫隙逐漸變寬，直到下一個畫面完全打開。
+// 動態規格:
+//   - 白天畫面 → 夜晚畫面 → 白天，各 2.35 秒。7 條橫向長條（每條 208 ÷ 7 ≈ 29.7 px）。
+//   - 0.4–1.65 秒（1.25 秒），easeInOut（二次）：所有長條同時從各自的上緣往下露出下一個畫面，從 0 打開到整條高度。
+//   - 前一個畫面留在下層不動。兩個畫面的內容都不移動。
+// 使用時機: 要明確切換兩個場景時使用，例如白天與夜晚、前後對比，或想營造復古感時。
+// 標籤: blinds, venetian-blinds, stripes, transition, wipe, scene-change
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#138
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 18
+// 18 ブラインド（細い帯ごとのすき間がだんだん広がって、次の画面が開く）
+CELLS[17] = abCell((k, w, h, u, a, b) => {
+  const p = eIOs(P(u, TA - 0.1, TB + 0.15)), N = 7, sh = h / N, S = [scrA, scrB];
+  S[a](k, w, h);
+  if (p <= 0) return;
+  k.save(); k.beginPath(); for (let i = 0; i < N; i++) k.rect(0, i * sh, w, sh * p + (p > 0.999 ? 1 : 0)); k.clip(); S[b](k, w, h); k.restore();
+});

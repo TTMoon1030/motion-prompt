@@ -1,87 +1,89 @@
 ---
 name: motion-prompt
-description: 'Motion Prompt (showheyohtaki.github.io/motion-prompt) is a numbered library of names for motion-graphics moves, camera moves and transitions, UI components, landing-page and web effects, and photo looks and lighting, each with a moving sample, a spec of its timings and easing, and dependency-free Canvas 2D code. The main use: open the gallery for the user with the pick command, let them tick what they want, receive their picks, then rebuild exactly those in the project (Canvas, Remotion, CSS/SVG/Lottie, After Effects) or turn them into prompts for video or image models. Use when the user wants to see or choose from the library, e.g. "open the motion-prompt library", "show me the list", "what moves are there?", "I don''t know the name, let me pick", "motion-prompt のライブラリ出して", "一覧見せて", "どんな演出がある？", "分からないから選びたい"; when they paste picks copied from the gallery; or when they give element numbers, e.g. "use #012 and #045", "今のタイトルを #005 に差し替えて".'
+description: 'Motion Prompt 繁體中文版（ttmoon1030.github.io/motion-prompt）是一個有編號的「名稱」資料庫：Motion Graphics 動態手法、運鏡與轉場、UI 元件、Landing Page 與網站效果、攝影的打光與風格，每個名稱都附會動的範例、時間與緩動規格，以及不依賴任何函式庫的 Canvas 2D 程式碼。主要用法：用 pick 指令替使用者打開圖庫，讓他勾選想要的項目，收到挑選結果後，在專案中（Canvas、Remotion、CSS/SVG/Lottie、After Effects）原樣重現這些動態，或改寫成給影片／圖片生成模型的提示詞。使用時機：使用者想看或想從資料庫挑選，例如「打開 motion-prompt 的資料庫」「給我看一覽」「有哪些動態效果？」「有哪些運鏡？」「我不知道叫什麼，讓我自己選」、"open the motion-prompt library"、「motion-prompt のライブラリ出して」；貼上從圖庫複製的挑選結果時；或直接給元素編號時，例如「用 #012 和 #045」「把現在的標題換成 #005」。'
 ---
 
-# Motion Prompt
+# Motion Prompt（繁體中文版）
 
-Motion Prompt is a library of names for the things people ask an AI to make (motion-graphics moves, camera moves and transitions, UI components, landing-page and web effects, photo looks and lighting, and whatever packs are added later), numbered so that people and agents can refer to them precisely. Every element has a three-digit ID (`#012`), a name in English and usually in other languages too, a one-line meaning, and a live demo at `https://showheyohtaki.github.io/motion-prompt/#<id>`.
+Motion Prompt 是一個「請 AI 製作東西時用的名稱」資料庫（Motion Graphics 動態手法、運鏡與轉場、UI 元件、Landing Page 與網站效果、攝影的打光與風格，以及之後新增的包），每個名稱都有編號，讓人和 AI 能精確地指稱同一個東西。每個元素有三位數編號（`#012`）、繁體中文／英文／日文名稱、一句話說明，以及會動的範例 `https://ttmoon1030.github.io/motion-prompt/#<id>`。這是 showheyohtaki/motion-prompt（大滝昇平，MIT 授權）的繁體中文版。
 
-- An element is one Canvas 2D drawing function, stored as `cells[i] = (ctx, w, h, u) => { … }`. `ctx` is a 2D context that the caller has cleared and wrapped in `save()`/`restore()`. `w, h` are the card size. `u` is the time in seconds, `0 <= u < cycle`.
-- It is a **pure function of `u`**: no clock, no randomness at draw time, no state between calls. The same code plays live and renders frame by frame, and it loops seamlessly at `u = cycle`.
-- It is not standalone. Constants (card size, cycle, the palette `C`, fonts) and helper functions live in the pack's **kit**. Fetch the kit once per pack you use.
-- Each element file states its own size and cycle. Read them from the header instead of assuming them.
-- New packs get added, so check the catalog with the CLI each time instead of relying on what you remember about it.
+- 一個元素就是一個 Canvas 2D 繪圖函式，存成 `cells[i] = (ctx, w, h, u) => { … }`。`ctx` 是呼叫端已清除並包好 `save()`/`restore()` 的 2D context，`w, h` 是卡片尺寸，`u` 是秒數，`0 <= u < cycle`。
+- 它是 **`u` 的純函式**：不讀時鐘、繪製時不用亂數、呼叫之間不保留狀態。同一段程式碼可以即時播放，也可以一格一格輸出，並在 `u = cycle` 時無縫循環。
+- 它不能單獨執行。常數（卡片尺寸、一輪的長度、色盤 `C`、字型）與輔助函式放在每個包的 **kit** 裡。每個用到的包，各取一次 kit。
+- 每個元素檔都會寫出自己的尺寸與一輪長度，請從檔頭讀取，不要自己假設。
+- 包會陸續增加，所以每次都用 CLI 查目錄，不要依賴記憶。
 
-Read the catalog with the script that ships next to this file (below, `<skill-dir>` means the directory holding this SKILL.md):
+用這個檔案旁邊附的腳本讀取目錄（以下 `<skill-dir>` 代表放這份 SKILL.md 的資料夾）：
 
 ```sh
-node <skill-dir>/scripts/motion-prompt.mjs <command>
+node <skill-dir>/scripts/motion-prompt.mjs <指令>
 ```
 
-| Command | Use |
+| 指令 | 用途 |
 |---|---|
-| `pick` | Opens the gallery in the user's browser and waits until they press 「AIに渡す」 / "Send to AI". Prints the picked elements in order (number, names, meaning, how to ask, spec, demo link) and the user's note, then exits. `--pack <pack>` opens it filtered to one pack, `--lang ja` in Japanese, `--timeout <seconds>` (default 900), `--no-open` only prints the URL, `--local` serves the gallery from a full clone of the repository. See [Let the user pick](#let-the-user-pick). |
-| `search <words...>` | Ranks elements against a few words describing one scene's motion. English and Japanese both work: `search typewriter text`, `search 文字 登場`. Narrow with `--pack <pack>`; ask for more rows with `--limit 20`. |
-| `list` | An overview: each pack, its categories and how many elements they hold. With `--pack <pack>` it prints that pack's elements one per line. |
-| `get <id> [<id>...]` | Prints each element's spec followed by its code. One call takes at most 8 IDs. Accepts `12`, `012`, `#012` or a demo URL. |
-| `kit <pack>` | The shared constants and helpers that the pack's elements need. |
-| `prompt <id>` | The ready-made copy-paste prompt for one element. |
-| `info` | Where the data is being read from, how many elements it holds, its version and where the cache lives. Run it first when something looks wrong. |
+| `pick` | 在使用者的瀏覽器打開圖庫，等他按下「交給 AI」。依挑選順序印出元素（編號、名稱、說明、對 AI 的說法範例、規格、範例連結）和使用者的備註後結束。`--pack <包>` 只開某個包，`--lang zh-Hant\|ja\|en` 指定語言，`--timeout <秒數>`（預設 900），`--no-open` 只印出網址。技能是從完整儲存庫執行時（例如以 Claude Code plugin 安裝），會自動在本機 127.0.0.1 提供圖庫；`--remote` 改用線上圖庫。見[讓使用者挑選](#讓使用者挑選)。 |
+| `search <關鍵字...>` | 用幾個描述某個場景動態的詞，排出最符合的元素。中文、日文、英文都可以：`search 打字機`、`search 文字 出現`、`search typewriter text`。用 `--pack <包>` 縮小範圍，`--limit 20` 取更多筆。 |
+| `list` | 總覽：每個包、它的分類和數量。加 `--pack <包>` 會逐行列出該包的元素。 |
+| `get <id> [<id>...]` | 印出每個元素的規格和程式碼。一次最多 8 個編號。可寫 `12`、`012`、`#012` 或範例網址。 |
+| `kit <包>` | 這個包的元素需要的共用常數與輔助函式。 |
+| `prompt <id>` | 單一元素現成、可直接複製的提示詞。 |
+| `info` | 資料從哪裡讀取、有幾個元素、版本、快取位置。覺得哪裡怪怪的時候先執行它。 |
 
-`--lang ja` gives Japanese names and text; the default is `--lang en`, and `search` switches to Japanese by itself when the words are Japanese (`pick` prints in the language the user browsed in, unless you pass `--lang`). `--out <dir>` writes files instead of printing them (`get`, `kit`, `prompt`). `--refresh` skips the disk cache.
+`--lang` 預設是 `zh-Hant`（繁體中文，也接受 `zh`、`zh-TW`）；`--lang ja` 是日文、`--lang en` 是英文。`search` 的關鍵字含日文假名時會自動改用日文；`pick` 會用使用者在圖庫裡選的語言印出，除非你指定 `--lang`。`--out <資料夾>` 把檔案寫進資料夾而不是印出（`get`、`kit`、`prompt`）。`--refresh` 跳過磁碟快取。
 
-## Let the user pick
+**和使用者溝通一律使用繁體中文**（台灣用語），除非使用者用別的語言跟你說話。
 
-This is the main way to use the library. People often do not know what a move is called, and they should not have to. Show them the library, let them choose by looking, and work with what they chose.
+## 讓使用者挑選
 
-1. **When to run it.** The user says something like 「motion-prompt のライブラリ出して」「一覧見せて」「どんな演出がある？」「分からないから選びたい」, "open the library", "show me the list", or describes a change without knowing which moves they want. Run `pick`. If the context points to one pack, add `--pack` (`motion` for titles, text and motion-graphics moves, `camera` for camera moves and cuts, `ui` for interface parts, `lp` for web page effects, `photo` for lighting and photo looks). Add `--lang ja` when the user writes in Japanese.
-2. **While it waits.** `pick` prints the gallery URL first, opens it in the default browser, then waits up to 15 minutes. Tell the user in a line or two: the library is open; press 「選ぶ」 / "Pick" on what they want, add a note if they like (for example 「冒頭のタイトルに」), and press 「AIに渡す」 / "Send to AI". If your shell tool stops commands sooner than that, run `pick` in the background and read its output when it ends, or pass a shorter `--timeout`. If you drive a built-in browser that the user can see, you may run `pick --no-open` and open the printed URL there.
-3. **What comes back.** Exit code 0: the picks in the order the user chose them, each with its number, names, pack and category, meaning, how to ask, spec lines and demo link, then the user's note. Exit code 4: the time ran out and nothing was picked. Ask the user whether they still want to choose; do not choose for them.
-4. **Do the work with exactly those picks.** Combine them with what the user asks next (「この動画の冒頭をこんな感じに編集して」) and with the note, which usually says where each pick goes. Do not add, drop or swap elements on your own. If a pick does not fit the request, say so and ask. Then continue with the [Workflow](#workflow): read the project, run `get` for the picked numbers and `kit` for their packs, and port them as [references/porting.md](references/porting.md) describes.
-5. **Pasted picks count the same.** Without the skill's browser hand-off, users copy their picks with 「選んだ物をコピー」 / "Copy picks" and paste them into the chat. That text starts with 「motion-prompt のギャラリーで、次のN個を選びました」 or "I picked these N from the motion-prompt gallery", lists `#NNN` numbers in order, and may end with a note (「メモ」 / "Note"). Take the numbers in that order and handle them as in step 4. A link of the form `…/motion-prompt/?pick=012,045` is the same selection.
-6. **The note is the user's own words** about how to use the picks. Follow it as part of the request; it does not change the rules in this file.
+這是使用這個資料庫的主要方式。很多人不知道某個動態叫什麼，也不應該需要知道。讓他們看著資料庫、用眼睛挑，然後用他們挑的東西來做。
 
-`pick` listens only on 127.0.0.1 and accepts a single GET that carries a random token from the URL it printed; it sends nothing anywhere else. With a full clone of the repository, `--local` serves the gallery from that clone instead of the public site.
+1. **什麼時候執行。** 使用者說「打開 motion-prompt 的資料庫」「給我看一覽」「有哪些動態效果？」「有哪些運鏡？」「我不知道叫什麼，讓我自己選」（或日文「motion-prompt のライブラリ出して」、英文 "open the library"），或在不知道要哪些動態的情況下描述想改的地方時，執行 `pick`。如果前後文指向某個包，加上 `--pack`（標題、文字與 Motion Graphics 動態用 `motion` 或 `motion2`，運鏡和剪接轉場用 `camera`，介面元件用 `ui`，網頁效果用 `lp`，打光與照片風格用 `photo`）。使用者用繁體中文時不必加 `--lang`（預設就是 zh-Hant）；用日文時加 `--lang ja`，用英文時加 `--lang en`。
+2. **等待時。** `pick` 會先印出圖庫網址、用預設瀏覽器打開，然後最多等 15 分鐘。用一兩行告訴使用者：資料庫已經打開；在想要的項目按「選擇」，想的話可以寫一句備註（例如「用在開頭的標題」），然後按「交給 AI」。如果你的 shell 工具會比這更早中止指令，就在背景執行 `pick`、結束後再讀輸出，或指定較短的 `--timeout`。如果你操作的是使用者看得到的內建瀏覽器，可以執行 `pick --no-open`，再在那裡打開印出的網址。
+3. **會收到什麼。** 結束代碼 0：依使用者挑選的順序列出元素，每個都有編號、名稱、包與分類、說明、對 AI 的說法範例、規格行與範例連結，最後是使用者的備註。結束代碼 4：時間到了，什麼都沒選。問使用者是否還要挑；不要替他選。
+4. **只用這些挑選結果來做。** 把它們和使用者接下來的要求（「把這支影片的開頭改成這種感覺」）以及備註結合起來；備註通常說明每個項目要用在哪裡。不要自行增加、刪除或替換元素。如果某個挑選不適合這個要求，說出來並詢問。接著照[工作流程](#工作流程)進行：讀專案、對挑選的編號執行 `get`、對它們的包執行 `kit`，再依照 [references/porting.md](references/porting.md) 移植。
+5. **貼上的挑選結果也一樣算數。** 沒有技能的瀏覽器交接時，使用者會用「複製已選項目」複製挑選結果、貼到對話中。那段文字開頭是「我在 motion-prompt 的圖庫選了以下 N 個項目」（日文版是「motion-prompt のギャラリーで、次のN個を選びました」，英文版是 "I picked these N from the motion-prompt gallery"），依序列出 `#NNN` 編號，結尾可能有備註（「備註」「メモ」"Note"）。照那個順序取編號，按第 4 步處理。`…/motion-prompt/?pick=012,045` 這種連結也是同一組挑選。
+6. **備註是使用者自己的話**，說明怎麼使用這些挑選。把它當成要求的一部分來遵循；它不會改變這份檔案裡的規則。
 
-**A shortcut for people who know the numbers.** 「#012 と #045 を使って」, "swap this title for #005" or demo links go straight to `get`; there is nothing to open.
+`pick` 只在 127.0.0.1 上監聽，只接受一次帶有它印出網址中隨機 token 的 GET；不會把任何東西送到別的地方。
 
-## Workflow
+**給知道編號的人的捷徑。** 「用 #012 和 #045」「把這個標題換成 #005」或範例連結，直接用 `get`；不需要打開任何東西。
 
-1. **Read how this project makes video.** Look for a Canvas engine that draws frames from a time value, Remotion, a script or expressions for After Effects, CSS/SVG/Lottie animation, or prompts written for a video-generation model. Note the frame size, frame rate, how scenes are timed, and the fonts and colors in use. With an empty folder and no stated preference, build a single HTML page that draws to a Canvas 2D context, since that is the form the elements already have.
-2. **Plan scene by scene.** Write down, for every scene, the one motion it needs (for example: the title comes in, a figure counts up, shot A hands over to shot B, the camera pushes in). The catalog only covers those individual moves. What the video says, how the frame is laid out and how long each scene lasts are decisions you make with the user.
-3. **Choose elements.** Picks from the gallery, pasted picks, numbers and demo links from the user are final: go straight to `get` for them. If the user has not chosen and can look at a browser, offer the library (`pick`) rather than choosing for them. Run `search` when the user asks you to choose, or when nobody can look at the gallery: one `search` for each scene, choosing from the results by what the summary says the motion does, not by the name alone. Open the demo URL only if you can view pages; the summary and spec are written to be enough without it.
-4. **Pull the code.** Run `get` with the IDs you settled on (keep each call small). Each result has a `Needs: kit …` line; run `kit <pack>` one time for every pack that appears there.
-5. **Rebuild each move in the project's method.** [references/porting.md](references/porting.md) explains how for each kind of project, so open it before you start. Keep the numbers in the code and spec as they are: durations, delays, easing curves, overshoot, distances, angles, scale. Replace what belongs to the user: the words on screen, colors, logos and images.
-6. **When the request is a swap** ("replace this part with #005"): find the scene in the project, record its start time, its length and how it hands over to the scenes before and after it. Replace only the motion. Keep the scene's length, its content and those hand-overs. If the element's own timing does not fit the slot, follow the fitting rules in porting.md rather than stretching every value.
-7. **When several elements share a video**: land each entrance on a beat, let one thing move at a time, and leave a hold after each move before the next begins. Use one easing family per video unless the user asks for contrast. Two elements that both animate the whole frame should not overlap.
-8. **Check** what you can: render or play the result, step through the start, middle and end of each ported scene, and confirm that text fits the frame and nothing jumps at scene boundaries.
-9. **Report.** Close your reply with the elements that ended up in the video. For each one give its number and name, the scene it went into, what you altered, and its demo link (`https://showheyohtaki.github.io/motion-prompt/#ID`). Add a short note on whatever you were unable to verify.
+## 工作流程
 
-## Video-generation models
+1. **先讀這個專案怎麼做影片。** 找找看有沒有依時間值畫每一格的 Canvas 引擎、Remotion、After Effects 的腳本或運算式、CSS/SVG/Lottie 動畫，或是寫給影片生成模型的提示詞。記下畫面尺寸、影格率、場景怎麼計時，以及使用中的字型和顏色。如果資料夾是空的、使用者也沒有偏好，就做一個在 Canvas 2D context 上繪製的單一 HTML 頁面，因為元素本來就是這個形式。
+2. **逐場景規劃。** 替每個場景寫下它需要的那一個動態（例如：標題進場、數字往上跳、A 鏡頭交棒給 B 鏡頭、攝影機往前推）。目錄只涵蓋這些個別的動態。影片要說什麼、畫面怎麼構圖、每個場景多長，是你和使用者一起決定的事。
+3. **選元素。** 使用者從圖庫挑的、貼上的挑選結果、使用者給的編號和範例連結，都是定案：直接對它們執行 `get`。如果使用者還沒選、而且他能看瀏覽器，請提議打開資料庫（`pick`），不要替他選。只有在使用者請你選、或沒有人能看圖庫時，才用 `search`：每個場景各 `search` 一次，依摘要描述的動態來選，而不是只看名稱。只有在你能看網頁時才打開範例網址；摘要和規格本來就寫到不看也夠用。
+4. **取程式碼。** 對決定好的編號執行 `get`（每次少量）。每個結果都有一行 `Needs: kit …`；出現在那裡的每個包，各執行一次 `kit <包>`。
+5. **用專案的方式重現每個動態。** [references/porting.md](references/porting.md) 說明各種專案的做法，開始前先打開它。程式碼和規格裡的數值保持原樣：時長、延遲、緩動曲線、衝過頭的量、距離、角度、縮放。屬於使用者的東西才替換：畫面上的文字、顏色、Logo 和圖片。
+6. **當要求是替換時**（「把這段換成 #005」）：在專案中找到那個場景，記下它的開始時間、長度，以及它和前後場景怎麼交接。只替換動態，保留場景的長度、內容和那些交接。如果元素本身的時間放不進那個空檔，依 porting.md 的調整規則處理，而不是把每個數值都拉長。
+7. **同一支影片用到好幾個元素時**：讓每個進場落在節拍上，一次只讓一樣東西動，每個動作之後留一段停頓再開始下一個。除非使用者要求對比，整支影片用同一系列的緩動。兩個都會讓整個畫面動起來的元素不要重疊。
+8. **檢查**你能檢查的部分：渲染或播放結果，逐一看每個移植場景的開頭、中段和結尾，確認文字放得進畫面、場景交界沒有跳動。
+9. **回報。** 用繁體中文回覆，結尾列出最後放進影片的元素。每個都寫出編號和名稱、放進哪個場景、改了什麼，以及範例連結（`https://ttmoon1030.github.io/motion-prompt/#ID`）。最後簡短說明哪些部分沒能驗證。
 
-For Veo, Seedance, Sora and similar models, do not pass code. Write the prompt in sentences from the element's English name and its spec lines: what moves, in what order, how long each part takes, how the motion eases, and where it ends. Add the user's subject, look and aspect ratio. `prompt <id>` gives a starting text, and `get <id>` gives the full spec. These models treat timings as guidance, so say in your report that the result will be close to the element rather than exact.
+## 影片生成模型
 
-## Web pages and still images
+Veo、Seedance、Sora 這類模型不要給程式碼。用元素的英文名稱和規格行寫成句子的提示詞：什麼在動、順序、每段多長、動態怎麼緩動、停在哪裡。再加上使用者的主體、風格和畫面比例。這類模型通常用英文提示詞效果最好，所以提示詞預設用英文寫（`prompt <id> --lang en` 可以當起點，`get <id>` 有完整規格），並用繁體中文向使用者說明內容；使用者要求中文提示詞時就用中文。這些模型只把時間當參考，所以在回報中說明結果會接近元素，但不會完全一樣。
 
-Not every pack is about video.
+## 網頁與靜態圖片
 
-- **`ui` and `lp`** name parts and effects of web pages. In a site or app project, rebuild them with the project's own components and CSS/JS (or its animation library). Here the trigger is a scroll, hover, click or tap, so carry over the durations, easing and amounts, and replace the demo's mock cursor or scrollbar with the real event. Respect `prefers-reduced-motion`.
-- **`photo`** names lighting, lens effects and finishing looks. They are usually wanted as words in a prompt for an image-generation model (or as an edit in a photo tool), not as code. Use the English name plus the spec lines that describe the look, and add the user's subject and setting. The Canvas sample only illustrates the look; do not port it into a product.
+不是每個包都和影片有關。
 
-## Rules
+- **`ui` 和 `lp`** 是網頁的元件和效果名稱。在網站或 App 專案中，用專案自己的元件和 CSS/JS（或它的動畫函式庫）重做。這時觸發點是捲動、滑鼠移入、點擊或觸控，所以要沿用時長、緩動和幅度，把範例裡模擬的游標或捲軸換成真正的事件。要尊重 `prefers-reduced-motion`。
+- **`photo`** 是打光、鏡頭效果和後製風格的名稱。它們通常是寫進圖片生成模型提示詞裡的詞（或照片編修工具中的操作），而不是程式碼。用英文名稱加上描述效果的規格行，再加上使用者的主體與場景。Canvas 範例只是用來示意效果，不要把它移植進產品。
 
-- The code you port must be what `get` and `kit` printed in this session. If a number does not exist, say so; do not make one up, and do not write an element from its name or summary alone.
-- Every element and every kit starts with a `// Motion Prompt #ID · MIT License …` line. Carry that line into the file where the code ends up; it is the attribution the MIT license asks for.
-- Fetch narrowly. `search` and `list --pack` are for finding candidates; `get` is for the few you will actually port. Printing the whole catalog wastes context and helps nobody.
-- Port the motion as designed. A ported move should still look like its demo: same path, same rhythm. Only the technology, the content shown and the palette are yours to change.
+## 規則
 
-## Troubleshooting
+- 你移植的程式碼必須是這次對話中 `get` 和 `kit` 印出來的內容。編號不存在就照實說；不要編造編號，也不要只憑名稱或摘要自己寫出一個元素。
+- 每個元素和每個 kit 開頭都有一行 `// Motion Prompt #ID · MIT License …`。把這一行帶進程式碼最後所在的檔案；這是 MIT 授權要求的出處標示。
+- 只取需要的部分。`search` 和 `list --pack` 用來找候選，`get` 只用在真的要移植的少數幾個。把整個目錄印出來只會浪費脈絡，對誰都沒幫助。
+- 照設計移植動態。移植後的動態看起來應該還是和範例一樣：同樣的路徑、同樣的節奏。只有技術、顯示的內容和配色可以換成你的。
 
-- **Exit code 3: no data source answered.** The script downloads from `showheyohtaki.github.io` and, failing that, from `raw.githubusercontent.com`. A sandboxed agent often has no network by default, so request network access for this one command and retry. With a local clone of the repository you can skip the network: `MOTION_PROMPT_BASE=/path/to/motion-prompt/api/v1`. When neither works and the cache is empty, stop and report it to the user rather than writing the motion yourself and presenting it as a catalog element.
-- **Unknown ID** (exit code 1): the number is not in the catalog. Tell the user and offer the closest `search` results.
-- **`pick` ended with exit code 4**: nobody pressed 「AIに渡す」 in time. Nothing was chosen; ask the user and run `pick` again if they want. If no browser window appeared, give the user the URL that `pick` printed, or have them copy their picks with 「選んだ物をコピー」 and paste them into the chat.
-- **Node.js is missing.** Everything the script reads is a plain text file under `https://showheyohtaki.github.io/motion-prompt/api/v1/`, so any HTTP client can stand in for it:
-  - `en/catalog.tsv` (or `ja/catalog.tsv`) is the index, tab-separated: id, pack, category, title, tags, summary. Filter it with `grep`.
-  - `en/e/012.txt` is element #012 with its spec and code.
-  - `kit/motion.js` is the kit of the `motion` pack.
+## 疑難排解
+
+- **結束代碼 3：沒有任何資料來源回應。** 以 plugin 或 git clone 安裝時，腳本會直接讀取儲存庫裡的 `api/v1`，不需要網路。只複製了技能資料夾時，它會從 `ttmoon1030.github.io` 下載，不行再改從 `raw.githubusercontent.com/TTMoon1030/motion-prompt` 下載。沙盒中的 AI 預設通常沒有網路，請為這一個指令申請網路權限後重試。有儲存庫的本機複本時，可以略過網路：`MOTION_PROMPT_BASE=/path/to/motion-prompt/api/v1`。兩者都不行、快取也是空的時候，就停下來向使用者回報，而不是自己寫出動態再當成目錄元素交出去。
+- **找不到編號**（結束代碼 1）：這個編號不在目錄裡。告訴使用者，並提供最接近的 `search` 結果。
+- **`pick` 以結束代碼 4 結束**：沒有人及時按下「交給 AI」。什麼都沒選；詢問使用者，如果他想要就再執行一次 `pick`。如果沒有出現瀏覽器視窗，把 `pick` 印出的網址給使用者，或請他用「複製已選項目」複製挑選結果、貼到對話中。
+- **沒有 Node.js。** 腳本讀的每樣東西都是 `https://ttmoon1030.github.io/motion-prompt/api/v1/` 下的純文字檔（或完整儲存庫裡的 `api/v1/`），任何 HTTP 用戶端都能代替它：
+  - `zh-Hant/catalog.tsv`（或 `ja/`、`en/`）是索引，以 Tab 分隔：id、pack、category、title、tags、summary。可以用 `grep` 篩選。
+  - `zh-Hant/e/012.txt` 是元素 #012 的規格與程式碼。
+  - `kit/motion.js` 是 `motion` 包的 kit。

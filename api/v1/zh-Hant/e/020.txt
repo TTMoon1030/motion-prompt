@@ -1,0 +1,36 @@
+// Motion Prompt #020 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#020
+//
+// Zoom Through 穿越轉場 / Zoom through
+// 包: motion (Motion Graphics 動態手法) · element 20 · 分類: 轉場與吸睛效果
+// 會發生什麼: 鏡頭衝進字母「O」的洞，從另一頭穿出到下一個場景。
+// 動態規格:
+//   - 場景 X（黃色底上的 ZOOM）→ 場景 Y（藍色底上的 GO!）→ 場景 X，各 2.35 秒
+//   - 以「O」的洞（半徑 24.5）中心為基準放大目前場景。最大倍率是洞剛好蓋滿整個畫面時倍率的 1.08 倍（約 14 倍）
+//   - 倍率 = 最大倍率^p（指數式放大，看起來呈等速）
+//   - p = 0.8 × easeIn（3 次方，0.25–1.2 秒）+ 0.2 × easeOut（3 次方，1.2–1.65 秒）：加速衝入，最後減速
+//   - 洞裡放入縮小為 1/最大倍率 的下一個場景。放大結束時剛好是原尺寸，畫面隨即切換為下一個場景
+// 使用時機: 想鑽進 Logo 或文字裡，帶著衝勁進入下一個場景時使用。
+// 標籤: zoom, zoom-through, transition, push-in, scale, tunnel, scene-change
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#020
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 20
+// 20 ズームスルー（文字の「O」の穴へ突っ込んで、その先の画面へ抜ける）
+function ring(k, x, y, col) { k.strokeStyle = col; k.lineWidth = 21; k.beginPath(); k.arc(x, y, 35, 0, 7); k.stroke(); }
+const ZP = [{ x: 228, y: 106, r: 24.5 }, { x: 300, y: 106, r: 24.5 }];
+function scrX(k, w, h) { k.fillStyle = C.yel; k.fillRect(0, 0, w, h); const f = `800 118px ${DISP}`; txt(k, 'Z', 128, 110, f, C.navy, 'center', 'middle'); ring(k, 228, 106, C.navy); ring(k, 324, 106, C.navy); txt(k, 'M', 432, 110, f, C.navy, 'center', 'middle'); }
+function scrY(k, w, h) { k.fillStyle = C.blue; k.fillRect(0, 0, w, h); const f = `800 118px ${DISP}`; txt(k, 'G', 208, 110, f, '#fff', 'center', 'middle'); ring(k, 300, 106, '#fff'); txt(k, '!', 372, 110, f, C.yel, 'center', 'middle'); }
+const SCZ = [scrX, scrY], ZBG = [C.yel, C.blue];
+CELLS[19] = abCell((k, w, h, u, a, b) => {
+  const po = ZP[a], Smax = Math.hypot(Math.max(po.x, w - po.x), Math.max(po.y, h - po.y)) / po.r * 1.08;
+  const p = eIn(P(u, TA - 0.25, TB - 0.3)) * 0.8 + eOut(P(u, TB - 0.3, TB + 0.15)) * 0.2;
+  if (p >= 1) return SCZ[b](k, w, h);
+  const s = Math.pow(Smax, p), Z = (kk, sc) => { kk.translate(po.x, po.y); kk.scale(sc, sc); kk.translate(-po.x, -po.y); };
+  k.save(); Z(k, s); SCZ[a](k, w, h);
+  k.save(); k.beginPath(); k.arc(po.x, po.y, po.r, 0, 7); k.clip(); k.fillStyle = ZBG[b]; k.fillRect(0, 0, w, h); Z(k, 1 / Smax); SCZ[b](k, w, h); k.restore();
+  k.restore();
+});

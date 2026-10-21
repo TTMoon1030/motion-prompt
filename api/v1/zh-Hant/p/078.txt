@@ -1,0 +1,15 @@
+請使用「Scroll Snap」（Scroll snap），這是「Landing Page 與網站效果」裡的一個名稱。
+Motion Prompt #078
+
+它是什麼：捲動後會剛好停在區塊的分界位置
+範例中會發生的事：稍微捲動一下，頁面就自動捲完剩下的距離，讓下一個區塊的頂端剛好對齊畫面頂端。
+規格：
+- 每個區塊的高度等於視窗高度（168 px）。第一個是淺藍底，第二個是深藍色。
+- 每 2.4 秒吸附一次。0.45–0.85 秒使用者只捲動 34 px（三次方 easeOut）。
+- 0.9–1.5 秒頁面自動捲完剩下的 134 px，對齊下一個區塊的頂端（三次方 easeOut）。
+- 後 2.4 秒以相同動作往上，回到第一個區塊（scroll-snap-type: y mandatory 的行為）。
+使用時機：想讓頁面像投影片一樣，一次看一整個畫面時。
+
+參考實作（Canvas 2D，一個畫面只由時間決定的函式）：https://ttmoon1030.github.io/motion-prompt/api/v1/zh-Hant/e/078.txt
+共用輔助程式碼：https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+請完全保留參考實作的形狀、時間點與緩動（easing）數值，只把裡面的文字、顏色和素材換成符合我正在製作的內容。

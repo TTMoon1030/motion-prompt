@@ -1,0 +1,47 @@
+// Motion Prompt #133 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#133
+//
+// 文字遮罩 / Text mask
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 13 · 分類: 文字與圖形效果
+// 會發生什麼: 粗體文字的形狀被挖空，只有字裡面看得到流動的海景；週期快結束時整個畫面都會露出來。
+// 動態規格:
+//   - 「OCEAN」（字重 900，system-ui，字距 2 px）。字級從 172 px 起，每次縮小 2 px，直到單字寬度不超過 500 px。
+//   - 字裡的景色持續在動：珊瑚色天空、黃色太陽上下 ±6 px，y = 116 以下是藍色海面，4 條白色波浪線每 4.7 秒交替方向流動 240 px，帆船每 4.7 秒橫越一次，雲飄移 60 px。
+//   - 作法：先在另一個離屏 canvas 上畫出文字，再用 source-in 把景色合成上去，景色只留在字形內。文字外圍有 4 px 白色描邊。
+//   - 文字以外的景色以 12% 不透明度顯示，3.45–3.85 秒升到 100%，4.25–4.65 秒回到 12%（smoothstep）。
+// 使用時機: 想在標題或品牌名稱裡放照片或影片，把文字和畫面結合在一起時使用。
+// 標籤: text-mask, mask, clipping-mask, knockout, text, typography, title
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#133
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 13
+// 13 テキストマスク（太い文字の形にくり抜いて、その中だけに動く景色が見える）
+const G0 = mkCanvas(CW, CH), GK0 = G0.getContext('2d', { willReadFrequently: true });
+function seaPattern(g, w, h, u) {
+  g.fillStyle = C.coral; g.fillRect(0, 0, w, h);
+  g.fillStyle = C.yel; g.beginPath(); g.arc(w * 0.6, 116 + 6 * Math.sin(2 * Math.PI * u / CYC), 60, 0, 7); g.fill();
+  g.fillStyle = C.blue; g.fillRect(0, 116, w, h - 116);
+  const off = (u / CYC) * 240; g.strokeStyle = '#fff'; g.lineWidth = 7; g.lineCap = 'round';
+  for (let j = 0; j < 4; j++) { const y = 128 + j * 22, d = j % 2 ? -1 : 1; g.beginPath(); for (let x = -20; x <= w + 20; x += 6) { const yy = y + 5 * Math.sin((x + off * d + j * 40) * 2 * Math.PI / 120); x === -20 ? g.moveTo(x, yy) : g.lineTo(x, yy); } g.stroke(); }
+  const bx = mod(u / CYC * (w + 160), w + 160) - 80;
+  g.fillStyle = '#fff'; g.beginPath(); g.moveTo(bx, 46); g.lineTo(bx, 100); g.lineTo(bx + 40, 100); g.closePath(); g.fill();
+  g.fillStyle = C.navy; g.beginPath(); g.moveTo(bx - 42, 104); g.lineTo(bx + 52, 104); g.lineTo(bx + 38, 122); g.lineTo(bx - 30, 122); g.closePath(); g.fill();
+  g.fillStyle = '#fff';[[60, 40], [320, 30], [470, 56]].forEach(([x, y]) => { const xx = mod(x + u / CYC * 60, w + 80) - 40; g.beginPath(); g.ellipse(xx, y, 30, 11, 0, 0, 7); g.fill(); });
+}
+CELLS[12] = (k, w, h, u) => {
+  stage(k);
+  let fs = 172; while (fs > 90 && tw(k, 'OCEAN', `900 ${fs}px system-ui`, '2px') > 500) fs -= 2;
+  const font = `900 ${fs}px system-ui`, Y = h / 2 + 6;
+  const open = smooth(P(u, 3.45, 3.85)) * (1 - smooth(P(u, 4.25, 4.65)));
+  TK.setTransform(1, 0, 0, 1, 0, 0); TK.globalCompositeOperation = 'source-over'; TK.clearRect(0, 0, w, h);
+  txt(TK, 'OCEAN', w / 2, Y, font, '#fff', 'center', 'middle', '2px');
+  GK0.setTransform(1, 0, 0, 1, 0, 0); GK0.globalCompositeOperation = 'source-over'; GK0.clearRect(0, 0, w, h); seaPattern(GK0, w, h, u);
+  TK.globalCompositeOperation = 'source-in'; TK.drawImage(G0, 0, 0); TK.globalCompositeOperation = 'source-over';
+  k.globalAlpha = 0.12 + 0.88 * open; seaPattern(k, w, h, u); k.globalAlpha = 1;
+  k.drawImage(TMP, 0, 0);
+  k.font = font; k.textAlign = 'center'; k.textBaseline = 'middle'; k.letterSpacing = '2px'; k.lineJoin = 'round';
+  k.strokeStyle = '#fff'; k.lineWidth = 4; k.strokeText('OCEAN', w / 2, Y); k.letterSpacing = '0px';
+};

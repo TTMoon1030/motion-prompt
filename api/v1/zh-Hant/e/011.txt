@@ -1,0 +1,40 @@
+// Motion Prompt #011 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#011
+//
+// 擠壓與伸展 / Squash & stretch
+// 包: motion (Motion Graphics 動態手法) · element 11 · 分類: 動態質感
+// 會發生什麼: 彈跳的角色著地時被壓扁，起跳時被拉長。
+// 動態規格:
+//   - 圓形角色，半徑 37。每 1.175 秒彈跳 1 次（每 4.7 秒 4 次），高度 92 px 的拋物線。同時沿正弦波在一個循環內左右來回 ±150 px
+//   - 著地期間（每次彈跳的最初與最後 10%）：縱向縮放以 2 次方曲線在 0.52（著地瞬間）與 1.28（離地瞬間）之間變化
+//   - 空中：縱向縮放 = 1 + 0.28 × s^3，s 為與最高點的時間差（最高點為 0，起跳與著地瞬間為 1），因此在速度快的地方被拉長
+//   - 橫向縮放永遠是 1 ÷ 縱向（保持體積）。變形以腳底為基準
+//   - 影子隨高度變小、變細。每次著地時，左右會彈出黃色短線（約持續 1 次彈跳的 18%）
+// 使用時機: 想讓角色或 Logo 的動作帶有重量感與柔軟感時使用。
+// 標籤: squash, stretch, squash-and-stretch, bounce, character, ball, animation-principle
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#011
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 11
+// 11 スクワッシュ＆ストレッチ（弾むキャラクターが、着地でつぶれ、飛ぶときに伸びる）
+CELLS[10] = (k, w, h, u) => {
+  stage(k);
+  const T = CYC / 4, q = mod(u, T) / T, c = 0.1, floor = h - 28, R = 37, Hgt = 92;
+  const X = w / 2 + 150 * Math.sin(u / CYC * Math.PI * 2);
+  let sy, yb, grounded = false;
+  if (q < c || q > 1 - c) { const d = (q < c ? q : 1 - q) / c; sy = lerp(0.52, 1.28, d * d); yb = floor; grounded = true; }
+  else { const qq = (q - c) / (1 - 2 * c), sp = Math.abs(2 * qq - 1); yb = floor - Hgt * (1 - sp * sp); sy = 1 + 0.28 * Math.pow(sp, 3); }
+  const sx = 1 / sy, hg = (floor - yb) / Hgt;
+  k.fillStyle = C.navy3; rr(k, 40, floor, w - 80, 5, 2.5); k.fill();
+  k.fillStyle = 'rgba(0,0,0,.32)'; k.beginPath(); k.ellipse(X, floor + 9, R * 1.2 * (1 - hg * 0.55) * Math.max(1, sx), 6 * (1 - hg * 0.5), 0, 0, 7); k.fill();
+  // 着地の小さなしぶき
+  const dq = q < 0.5 ? q : q - 1; if (Math.abs(dq) < 0.16 && dq > -0.02) { const t = (dq + 0.02) / 0.18; k.strokeStyle = C.yel; k.lineWidth = 5 * (1 - t); k.lineCap = 'round';[-1, 1].forEach(s => { k.beginPath(); k.moveTo(X + s * (50 + 28 * t), floor - 6 - 10 * t); k.lineTo(X + s * (62 + 40 * t), floor - 12 - 20 * t); if (t < 0.97) k.stroke(); }); }
+  k.save(); k.translate(X, yb); k.scale(sx, sy);
+  k.fillStyle = C.coral; k.beginPath(); k.arc(0, -R, R, 0, 7); k.fill();
+  k.fillStyle = '#fff'; k.beginPath(); k.ellipse(-12, -R - 4, 7, 9.5, 0, 0, 7); k.ellipse(12, -R - 4, 7, 9.5, 0, 0, 7); k.fill();
+  k.fillStyle = C.navy; k.beginPath(); k.arc(-10.5, -R - 3, 3.8, 0, 7); k.arc(13.5, -R - 3, 3.8, 0, 7); k.fill();
+  k.restore();
+};

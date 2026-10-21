@@ -1,0 +1,29 @@
+// Motion Prompt #110 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#110
+//
+// 魚眼鏡頭 / Fisheye lens
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 14 · 分類: 鏡頭與相機效果
+// 會發生什麼: 街景中央向外膨脹，建築的垂直線與道路的線條向外彎成弧形，四個角落則留在原位。
+// 動態規格:
+//   - 場景 2：街角。後方是一排建築、樹與路燈（x 114, 292, 494），道路在 y 132–162，人物站在左前方（腳底 x 176, y 200，身高 124 px）。
+//   - 變形：距中心 d 的點，移到該距離的 g = (1 + k) / (1 + k·d²/R²) 倍處，R = 中心到角落的距離（289 px）
+//   - k：0 → 1.25；中心放大 2.25×，四角不動
+//   - 所有輪廓在變形前每隔 6 px 切一段，因此直線會變成曲線
+//   - 右上焦距 24mm → 8mm
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想呈現有魄力、帶玩心或像從窺孔看出去的視角時（滑板、MV 等）。
+// 標籤: fisheye, fisheye lens, barrel distortion, ultra wide, 8mm, distortion
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#110
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 14
+// 魚眼レンズ: 中心がふくらみ、建物の縦の線が外側へ丸く曲がる
+CELLS[13] = cell((k, u) => {
+  const a = env(u), kk = 1.25 * a, cx = CW / 2, cy = CH / 2, R2 = cx * cx + cy * cy;
+  const M = kk < 0.002 ? null : (x, y) => { const dx = x - cx, dy = y - cy, g = (1 + kk) / (1 + kk * (dx * dx + dy * dy) / R2); return [cx + dx * g, cy + dy * g]; };
+  stageStreet(k, BASE, { M });
+  hud(k, `${Math.round(lerp(24, 8, a))}mm`);
+});

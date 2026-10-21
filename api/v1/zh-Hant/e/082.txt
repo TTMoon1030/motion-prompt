@@ -1,0 +1,34 @@
+// Motion Prompt #082 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#082
+//
+// Hover 圖片放大 / Image zoom on hover
+// 包: lp (Landing Page 與網站效果) · element 10 · 分類: 滑鼠與點擊的互動
+// 會發生什麼: 游標所在的照片外框大小不變，裡面的圖慢慢放大，游標離開後縮回原狀。
+// 動態規格:
+//   - 兩個照片外框，222 × 118（圓角 8）。游標先停在左邊，再停在右邊，各約 1.5 秒。
+//   - 滑鼠移入時內容以中心為基準，在 0.5 秒內縮放 1→1.15（三次方 easeOut）；移開時以 0.5 秒復原。
+//   - 超出外框的部分會被裁掉（overflow: hidden）。外框和下方的說明文字不動。
+// 使用時機: 在照片列表（作品、商品、文章）中，想讓人知道即將選取的是哪一張時。
+// 標籤: hover, zoom, image, scale, overflow-hidden, thumbnail, gallery
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#082
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 10
+// 10 ホバーで画像ズーム（枠はそのままで、中の写真だけがゆっくり拡大する）
+CELLS[9] = (k, w, h, u) => {
+  frame(k);
+  const FX = [22, 267], FY = 16, FW = 222, FH = 118, ZOOM = 0.15;
+  const cur = t => path([[0, 60, 160], [0.5, 120, 70], [1.8, 140, 84], [2.2, 370, 70], [3.4, 390, 84], [3.9, 470, 160], [4.8, 60, 160]], t);
+  view(k, () => {
+    for (let i = 0; i < 2; i++) {
+      const inside = t => { const [x, y] = cur(t); return x > FX[i] && x < FX[i] + FW && y > FY && y < FY + FH; };
+      const q = trans(inside, u, 0.5);
+      pic(k, FX[i], FY, FW, FH, i, 8, 1 + ZOOM * q);
+      txt(k, ['夏の山小屋', '海辺のカフェ'][i], FX[i], FY + FH + 20, `800 13px ${JP}`, C.ink); bars(k, FX[i], FY + FH + 28, 150, 1);
+    }
+    const [cx, cy] = cur(u); cursor(k, cx, cy);
+  });
+};

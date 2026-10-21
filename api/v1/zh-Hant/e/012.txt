@@ -1,0 +1,46 @@
+// Motion Prompt #012 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#012
+//
+// 形狀變形 / Shape morph
+// 包: motion (Motion Graphics 動態手法) · element 12 · 分類: 動態質感
+// 會發生什麼: 形狀從圓形依序平滑變成方形、星形、愛心，顏色也一起轉變。
+// 動態規格:
+//   - 4 個形狀，各 1.175 秒：圓形 → 四角削圓的方形 → 星形 → 愛心 → 回到圓形。基準半徑 64
+//   - 每段先靜止，再於該段結束前 0.62 秒到 0.04 秒之間（0.58 秒）變形成下一個形狀
+//   - 每個外框都以 240 個點儲存，同編號的點之間做線性插值。進度使用 backOut（s = 1.6），會稍微衝過頭
+//   - 顏色：藍色 → 珊瑚色 → 黃色 → 薄荷綠，以 easeInOut（2 次方）混色
+//   - 變形期間縮放比例膨脹為 1 + 0.07 × sin(π × 進度)
+//   - 下方有 4 個圓點；代表目前形狀的圓點較大並上色
+// 使用時機: 想把一個圖示或 Logo 不經剪接、直接變成另一個時使用。
+// 標籤: morph, morphing, shape, path, interpolate, transform, icon
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#012
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 12
+// 12 モーフィング（● → ■ → ★ → ♥ と、形と色がなめらかに変わる）
+const MN = 240;
+const SHAPES = (() => {
+  const R = 64, mk = fn => { const a = []; for (let i = 0; i < MN; i++) a.push(fn(i / MN)); return a; };
+  const circle = mk(t => { const a = t * Math.PI * 2 - Math.PI / 2; return [Math.cos(a) * R, Math.sin(a) * R]; });
+  const sq = mk(t => { const a = t * Math.PI * 2 - Math.PI / 2; let r = R * 0.88 / Math.max(Math.abs(Math.cos(a)), Math.abs(Math.sin(a))); r = Math.min(r, R * 1.13); return [Math.cos(a) * r, Math.sin(a) * r]; });
+  const st = mk(t => { const seg = 1 / 10, j = Math.floor(t / seg), f = (t - j * seg) / seg, ro = R * 1.2, ri = R * 0.56; const a0 = j * Math.PI / 5 - Math.PI / 2, a1 = (j + 1) * Math.PI / 5 - Math.PI / 2, r0 = j % 2 ? ri : ro, r1 = j % 2 ? ro : ri; return [lerp(Math.cos(a0) * r0, Math.cos(a1) * r1, f), lerp(Math.sin(a0) * r0, Math.sin(a1) * r1, f)]; });
+  const hp = mk(t => { const a = t * Math.PI * 2, s = R / 15.5; return [16 * Math.pow(Math.sin(a), 3) * s, -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) * s - 4]; });
+  return [circle, sq, st, hp];
+})();
+const MCOL = [C.blue, C.coral, C.yel, C.mint];
+CELLS[11] = (k, w, h, u) => {
+  stage(k);
+  const T = CYC / 4, i = Math.min(3, Math.floor(u / T)), lu = u - i * T;
+  const pr = P(lu, T - 0.62, T - 0.04), p = backOut(pr, 1.6), pc = eIOs(pr);
+  const A = SHAPES[i], B = SHAPES[(i + 1) % 4], X = w / 2, Y = h / 2 + 3;
+  // 次の形の予告（左右の小さな点）
+  for (let j = 0; j < 4; j++) { const on = j === i ? 1 - pc : j === (i + 1) % 4 ? pc : 0; k.fillStyle = mix(C.navy3, MCOL[j], on); k.beginPath(); k.arc(X - 39 + j * 26, h - 16, 5 + 2 * on, 0, 7); k.fill(); }
+  const pulse = 1 + 0.07 * Math.sin(Math.PI * pr);
+  k.save(); k.translate(X, Y - 8); k.scale(pulse, pulse);
+  k.fillStyle = mix(MCOL[i], MCOL[(i + 1) % 4], pc); k.beginPath();
+  for (let j = 0; j < MN; j++) { const x = lerp(A[j][0], B[j][0], p), y = lerp(A[j][1], B[j][1], p); j ? k.lineTo(x, y) : k.moveTo(x, y); }
+  k.closePath(); k.lineJoin = 'round'; k.strokeStyle = k.fillStyle; k.lineWidth = 8; k.stroke(); k.fill(); k.restore();
+};

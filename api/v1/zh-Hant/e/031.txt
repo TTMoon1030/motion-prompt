@@ -1,0 +1,27 @@
+// Motion Prompt #031 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#031
+//
+// 升鏡 / Crane up
+// 包: camera (運鏡與轉場) · element 07 · 分類: 鏡頭運動
+// 會發生什麼: 攝影機一邊上升一邊往下俯，直到變成俯視人物的構圖。
+// 動態規格:
+//   - 攝影機：高度從 1.4 m 上升到 9 m，同時往前移動 0 m → 1.5 m
+//   - 方向：往下俯，讓人物（前方 8 m）保持在畫面內；俯仰角 = -0.86 × atan2(高度 - 1.0, 8 - 前進量)，約 -2.5° → -44°
+//   - 時間：0.5 秒到 3.4 秒（2.9 秒），三次緩入緩出（相當於 cubic-bezier(0.65,0,0.35,1)）
+//   - 被攝體：人物不動；隨攝影機上升而變小，地面格線佈滿畫面，地平線從上緣離開
+//   - 復位：3.4–4.2 秒停住，最後 0.5 秒交叉淡化回起始狀態（一輪 4.7 秒）
+//   - 右上角顯示高度（↑ 1.4m → ↑ 9.0m）
+// 使用時機: 在場景結尾離開人物、呈現全景，或揭示場地有多大時。
+// 標籤: crane, crane up, jib, boom up, rise, high angle, camera move
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#031
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 07
+// 07 クレーンアップ: カメラが上昇し、見下ろしになる
+CELLS[6] = shot(camCell((k, w, h, p) => {
+  const y = lerp(1.4, 9, p), z = lerp(0, 1.5, p);
+  world(k, w, h, cam({ y, z, pitch: -0.86 * Math.atan2(y - 1.0, 8 - z) }), { person: { z: 8 } });
+}, p => `↑ ${lerp(1.4, 9, p).toFixed(1)}m`));

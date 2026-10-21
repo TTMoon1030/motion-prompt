@@ -1,0 +1,50 @@
+// Motion Prompt #143 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#143
+//
+// 爆炸圖 / Exploded view
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 23 · 分類: 轉場與吸睛效果
+// 會發生什麼: 手機一層層分開，展示內部構造，接著再組合回去。
+// 動態規格:
+//   - 等角（Isometric）視角的手機，由 4 層組成（背蓋、電池、電路板、螢幕）。每層是平的圓角板，畫在縮放 0.85 倍、左右各傾斜 30° 的座標軸上，側面厚度 6 px。
+//   - 分開：從 0.45 秒起，每層 0.75 秒，每一層比下面那層晚 0.08 秒，backOut(s=1.3)。第 i 層（由下往上 0–3）的高度 = 7i + 30i × 進度，所以最下層的背蓋固定不動。
+//   - 分開期間，每層每 4.7 秒上下浮動 2 次、幅度 ±3 px，角落之間以虛線輔助線相連，右側出現帶引線的名稱標籤（示範中為日文）。
+//   - 組合：從 3.25 秒起，每層 0.7 秒，從最上層開始，各相隔 0.07 秒，easeInOut（三次）。
+// 使用時機: 想一眼說明產品內部有什麼、如何運作或由什麼組成時使用。
+// 標籤: exploded-view, explode, layers, isometric, product, breakdown, explainer
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#143
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 23
+// 23 分解図（スマホの部品が層ごとにばらけて中の構造を見せ、また組み上がる）
+const XL = [
+  { name: '背面', o: [-27, -50, 54, 100, 10], side: '#B8483D', draw: g => { g.fillStyle = C.coral; rr(g, -27, -50, 54, 100, 10); g.fill(); g.fillStyle = C.navy; g.beginPath(); g.arc(-12, -34, 7, 0, 7); g.fill(); g.beginPath(); g.arc(2, -34, 5, 0, 7); g.fill(); } },
+  { name: '電池', o: [-21, -40, 42, 68, 6], side: '#17946F', draw: g => { g.fillStyle = C.mint; rr(g, -21, -40, 42, 68, 6); g.fill(); g.fillStyle = '#fff'; g.fillRect(-3, -18, 6, 20); g.fillRect(-10, -11, 20, 6); } },
+  { name: '基板', o: [-25, -48, 50, 96, 6], side: '#2550B5', draw: g => { g.fillStyle = C.blue; rr(g, -25, -48, 50, 96, 6); g.fill(); g.fillStyle = C.yel; g.fillRect(-16, -38, 16, 14); g.fillRect(4, -30, 12, 10); g.fillRect(-14, 8, 26, 14); g.fillStyle = C.mint; g.fillRect(-18, -14, 34, 3); g.fillRect(-4, 26, 3, 16); } },
+  { name: '画面', o: [-27, -50, 54, 100, 10], side: '#AEB8D4', draw: g => { g.fillStyle = '#fff'; rr(g, -27, -50, 54, 100, 10); g.fill(); g.fillStyle = C.navy2; rr(g, -22, -44, 44, 88, 6); g.fill(); for (let i = 0; i < 6; i++) { g.fillStyle = PAL[i % 4]; rr(g, -16 + (i % 2) * 18, -36 + Math.floor(i / 2) * 18, 13, 13, 3); g.fill(); } } },
+];
+const ISO = (px, py) => [(px - py) * 0.866, (px + py) * 0.5];
+CELLS[22] = (k, w, h, u) => {
+  u = snapU(u);
+  stage(k);
+  const X = 200, Y = 156, SP = 30, SC = 0.85;
+  const ex = i => backOut(P(u, 0.45 + i * 0.08, 1.2 + i * 0.08), 1.3) * (1 - eIO(P(u, 3.25 + (3 - i) * 0.07, 3.95 + (3 - i) * 0.07)));
+  const E = XL.map((_, i) => ex(i)), zs = E.map((e, i) => i * 7 + e * i * SP + 3 * Math.sin(2 * Math.PI * 2 * u / CYC + i) * clamp(e));
+  k.fillStyle = 'rgba(0,0,0,.3)'; k.beginPath(); k.ellipse(X, Y + 40, 64, 13, 0, 0, 7); k.fill();
+  // 縦の補助線（ばらけたときだけ）
+  const e3 = clamp(E[3]); if (e3 > 0.03) { k.save(); k.setLineDash([4, 7]); k.strokeStyle = C.dim; k.lineWidth = 2; k.globalAlpha = e3;[[-27, -50], [27, 50], [-27, 50]].forEach(([px, py]) => { const [ix, iy] = ISO(px * SC, py * SC); k.beginPath(); k.moveTo(X + ix, Y + iy - zs[0]); k.lineTo(X + ix, Y + iy - zs[3]); k.stroke(); }); k.restore(); }
+  XL.forEach((L, i) => {
+    const z = zs[i];
+    for (let dz = 6; dz >= 1; dz--) { k.save(); k.translate(X, Y - z + dz); k.scale(SC, SC); k.transform(0.866, 0.5, -0.866, 0.5, 0, 0); k.fillStyle = L.side; rr(k, ...L.o); k.fill(); k.restore(); }
+    k.save(); k.translate(X, Y - z); k.scale(SC, SC); k.transform(0.866, 0.5, -0.866, 0.5, 0, 0); L.draw(k); k.restore();
+    // ラベル
+    const a = clamp(E[i]); if (a > 0.03) {
+      const [rx, ry] = ISO((L.o[0] + L.o[2]) * SC, L.o[1] * SC), sx = X + rx + 6, sy = Y + ry - z + 4, lx = 352, ly = Y + 8 - z - i * 2;
+      k.globalAlpha = a; k.strokeStyle = C.dim; k.lineWidth = 2; k.beginPath(); k.moveTo(sx, sy); k.lineTo(lx - 10, ly); k.stroke();
+      k.fillStyle = C.dim; k.beginPath(); k.arc(sx, sy, 4, 0, 7); k.fill();
+      txt(k, L.name, lx, ly + 1, `800 26px ${JP}`, '#fff', 'left', 'middle'); k.globalAlpha = 1;
+    }
+  });
+};

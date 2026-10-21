@@ -1,0 +1,47 @@
+// Motion Prompt #093 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#093
+//
+// 平滑捲動 / Smooth scroll
+// 包: lp (Landing Page 與網站效果) · element 21 · 分類: 載入、轉場與持續動態
+// 會發生什麼: 點擊選單中的「價格」，頁面平順地捲到價格區塊；點擊右下角的向上箭頭，頁面又平順地回到頂端。
+// 動態規格:
+//   - 0.9 秒點擊選單項目「價格」；捲動量在 0.95–2.0 秒（1.05 秒）內 0→296 px（三次方 easeInOut）。
+//   - 停止位置 = 價格區塊上緣（330 px）− 固定式 Header 高度（34 px）。
+//   - 捲動量超過 60 px 後，右下角的圓形「回到頂端」按鈕（半徑 15）在接下來 40 px 的捲動中淡入。
+//   - 3.1 秒點擊該按鈕；捲動量在 3.15–4.2 秒內 296→0（三次方 easeInOut）。
+//   - 價格區塊在畫面中時，選單的「價格」變為橘紅色。
+// 使用時機: 從選單或目錄跳到同一頁的其他區塊時，想讓讀者看清楚自己移到了哪裡。
+// 標籤: smooth-scroll, scroll-behavior, anchor-link, in-page-link, back-to-top, navigation
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#093
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 21
+// 21 スムーススクロール（メニューを押すと、ページがなめらかに目的の場所まで動く）
+CELLS[20] = (k, w, h, u) => {
+  frame(k);
+  const TO = 296;   // 「料金」セクションの頭（330）− ヘッダーの高さ（34）
+  const y = TO * eIO(P(u, 0.95, 2.0)) * (1 - eIO(P(u, 3.15, 4.2)));
+  const [cx, cy] = path([[0, 380, 132], [0.75, 360, 18], [1.0, 360, 18], [2.9, 478, 140], [3.25, 478, 140], [4.8, 380, 132]], u);
+  view(k, () => {
+    k.save(); k.translate(0, -y);
+    pic(k, 24, 46, 222, 110, 0, 8); txt(k, 'ちょうどいい道具を。', 264, 84, `800 19px ${JP}`, C.ink); bars(k, 264, 98, 210, 3);
+    k.fillStyle = C.soft; k.fillRect(0, 170, VW, 160);
+    txt(k, '特長', VW / 2, 206, `800 17px ${JP}`, C.ink, 'center');
+    for (let i = 0; i < 3; i++) { const x = 100 + i * 155; k.fillStyle = C.blueL; k.beginPath(); k.arc(x, 252, 24, 0, 7); k.fill(); bars(k, x - 46, 288, 92, 2); }
+    txt(k, '料金', VW / 2, 370, `800 17px ${JP}`, C.ink, 'center');
+    ['¥0', '¥980', '¥2,980'].forEach((s, i) => {
+      const x = 50 + i * 143, hi = i === 1; k.fillStyle = '#fff'; rr(k, x, 388, 125, 96, 8); k.fill();
+      k.lineWidth = hi ? 2.5 : 1.5; k.strokeStyle = hi ? C.acc : C.faint; k.stroke();
+      txt(k, s, x + 62.5, 428, `800 20px ${EN}`, hi ? C.acc : C.ink, 'center'); bars(k, x + 22, 444, 81, 2);
+    });
+    k.restore();
+    header(k, 0, y > 250 ? 1 : -1);
+    const tb = clamp((y - 60) / 40);   // ページトップへ戻るボタン
+    if (tb > 0) { k.globalAlpha = tb; k.fillStyle = C.ink; k.beginPath(); k.arc(478, 140, 15, 0, 7); k.fill(); k.strokeStyle = '#fff'; k.lineWidth = 2.4; k.lineCap = 'round'; k.lineJoin = 'round'; k.beginPath(); k.moveTo(472, 143); k.lineTo(478, 136.5); k.lineTo(484, 143); k.stroke(); k.globalAlpha = 1; }
+    sbar(k, y / TO * 0.7, 0.36);
+    click(k, cx, cy, u, [0.9, 3.1]);
+  });
+};

@@ -72,7 +72,7 @@
 
 1〜3はコーディングAIに頼めます（「CONTRIBUTING.ja.md に従って packs/camera/meta.json にスペイン語を足して。自信のない名前は全部挙げて」）。そのあと、名前を自分の目で確かめてください。そこが、あなたにしかできない部分です。
 
-ギャラリーのサイトとスキルのコマンドは、今のところ英語と日本語だけです。足した言語は、`packs/` の一覧と `api/v1/catalog.json` に出ます。くわしくは [FORMAT.md](FORMAT.md) にあります。
+ギャラリーのサイトとスキルのコマンドは、今のところ繁体字中国語・英語・日本語だけです。足した言語は、`packs/` の一覧と `api/v1/catalog.json` に出ます。くわしくは [FORMAT.md](FORMAT.md) にあります。
 
 動画もその言語で作るときは、[`make-your-own/prompts/ja/01-translate.md`](make-your-own/prompts/ja/01-translate.md) を使います。
 

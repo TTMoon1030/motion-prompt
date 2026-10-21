@@ -1,0 +1,46 @@
+// Motion Prompt #107 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#107
+//
+// 長曝 / Long exposure
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 11 · 分類: 鏡頭與相機效果
+// 會發生什麼: 街道轉為夜晚，行駛中的汽車淡到幾乎看不見，車後拉出一條紅色尾燈光軌，對向車道則有白色與琥珀色的光軌通過。
+// 動態規格:
+//   - 場景 2：街角。後方是一排建築、樹與路燈（x 114, 292, 494），道路在 y 132–162，人物站在左前方（腳底 x 176, y 200，身高 124 px）。顏色轉為夜晚（天空 #2C3B5E，每 3 扇窗中有 1 扇為 #FFC75A）
+//   - 汽車：每 5 秒 x −60 → 600；車身不透明度 100% → 10%
+//   - 尾燈光軌：從 x −60 畫到汽車所在位置：y 145 為 #FF5B4D 2.6 px，y 149 為 #FF8A6E 1.4 px
+//   - 對向車道：橫跨整個畫面寬的線，y 135 為 #FFE9B8 2.6 px，y 138.5 為 #FFC75A 1.6 px，y 141.5 為 #FFE9B8 1.2 px（隨效果量變濃）
+//   - 右上快門速度 1/250 → 8″
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想用一張照片呈現夜晚車流，或如絲般流動的水與雲時。
+// 標籤: long exposure, light trails, slow shutter, night photography, car trails, motion
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#107
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 11
+// 長時間露光: シャッターを開け続けると、夜道の車は消え、ライトだけが光の線になる
+CELLS[10] = cell((k, u) => {
+  const a = env(u), x = lerp(-60, 600, u / CYC);
+  const p = pal(BASE, NIGHT, a);
+  stageStreet(k, p, {
+    car: false, person: false,
+    after: D => {
+      const kk = D.k;
+      // 車の通った跡: 尾灯（赤）と前照灯（白〜アンバー）の線。車の後ろに伸びる
+      kk.save(); kk.globalAlpha = a; kk.lineCap = 'round';
+      const x0 = -60, x1 = Math.min(x, CW + 40);
+      const ln = (ya, yb, c1, c2, w1, w2) => { kk.strokeStyle = c1; kk.lineWidth = w1; kk.beginPath(); kk.moveTo(x0, ya); kk.lineTo(x1, ya); kk.stroke(); kk.strokeStyle = c2; kk.lineWidth = w2; kk.beginPath(); kk.moveTo(x0, yb); kk.lineTo(x1, yb); kk.stroke(); };
+      ln(145, 149, '#FF5B4D', '#FF8A6E', 2.6, 1.4);
+      // 反対車線の車たちの跡（画面いっぱい）
+      for (const [y, c, lw] of [[135, '#FFE9B8', 2.6], [138.5, BASE.lit, 1.6], [141.5, '#FFE9B8', 1.2]]) { kk.strokeStyle = c; kk.lineWidth = lw; kk.beginPath(); kk.moveTo(-10, y); kk.lineTo(CW + 10, y); kk.stroke(); }
+      kk.restore();
+    }
+  });
+  // 車の本体は露光が長いほど薄く写る
+  k.save(); k.globalAlpha = 1 - 0.9 * a; const D = pen(k);
+  car(D, x, p, { head: BASE.lit, tail: '#FF5B4D' }); k.restore();
+  figure(pen(k), FIG[0], FIG[1], FIG[2], p.person);
+  hud(k, a > 0.5 ? '8″' : '1/250');
+});

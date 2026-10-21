@@ -1,0 +1,36 @@
+// Motion Prompt #106 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#106
+//
+// 移軸 / Tilt-shift
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 10 · 分類: 鏡頭與相機效果
+// 會發生什麼: 街景上下兩條帶狀區域逐漸模糊，只有道路、汽車與小人所在的中間帶保持對焦，整條街看起來像模型。
+// 動態規格:
+//   - 街角（後方是一排建築、樹與路燈，道路在 y 132–162）拿掉前景的大人物，人行道上站著 4 個身高 23–26 px 的小人（腳底 y 172）；汽車每 5 秒從 x −60 開到 600
+//   - 對焦帶：y 66–176 保持清晰
+//   - 模糊：y 0–42 與 y 190–208 為 0 → 7 px；y 42–66 與 y 176–190 為 0 → 3 px
+//   - 對焦帶邊界畫虛線（線段 6 px、間隔 5 px，#8E8E93，75%）
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想讓城市或活動看起來像可愛的玩具模型世界時。
+// 標籤: tilt-shift, miniature, miniature effect, fake miniature, selective focus, toy town, focus band
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#106
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 10
+// ティルトシフト: 上下の帯がぼけて中央の帯だけピントが合い、街と小さな人と車が模型のように見える
+CELLS[9] = cell((k, u) => {
+  const a = env(u), carX = lerp(-60, 600, u / CYC);
+  const minis = D => { [[196, 26], [322, 26], [340, 23], [452, 25]].forEach(([x, h]) => figure(D, x, 172, h, BASE.person)); };
+  const [S, ks] = layer('tilt'); stageStreet(ks, BASE, { car: carX, person: false, after: minis });
+  const [B1, k1] = layer('tilt-1'); k1.filter = `blur(${(3 * a).toFixed(2)}px)`; k1.drawImage(S, 0, 0); k1.filter = 'none';
+  const [B2, k2] = layer('tilt-2'); k2.filter = `blur(${(7 * a).toFixed(2)}px)`; k2.drawImage(S, 0, 0); k2.filter = 'none';
+  k.drawImage(S, 0, 0);
+  const band = (img, y0, y1) => { k.save(); k.beginPath(); k.rect(0, y0, CW, y1 - y0); k.clip(); k.drawImage(img, 0, 0); k.restore(); };
+  band(B2, 0, 42); band(B1, 42, 66); band(B1, 176, 190); band(B2, 190, CH);
+  // ピントの帯の目印（写真アプリの線）
+  k.save(); k.globalAlpha = 0.75 * a; k.strokeStyle = '#8E8E93'; k.lineWidth = 1.4; k.setLineDash([6, 5]);
+  k.beginPath(); k.moveTo(0, 66); k.lineTo(CW, 66); k.moveTo(0, 176); k.lineTo(CW, 176); k.stroke(); k.setLineDash([]);
+  k.restore();
+});

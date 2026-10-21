@@ -1,7 +1,7 @@
-// Motion Prompt #121-144 · MIT License (c) 2026 Shohei Ohtaki · https://showheyohtaki.github.io/motion-prompt/#121
+// Motion Prompt #121-144 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#121
 //
-// Kit for pack "motion2" (Motion graphics moves, part 2 / モーショングラフィックスの演出 第2弾): the constants and helpers its elements share.
-// Elements #121-144 · 539x208 px · cycle 4.7 s. Element code: https://showheyohtaki.github.io/motion-prompt/api/v1/en/e/<id>.txt (or /ja/).
+// Kit for pack "motion2" (Motion graphics moves, part 2 / Motion Graphics 動態手法 第二彈 / モーショングラフィックスの演出 第2弾): the constants and helpers its elements share.
+// Elements #121-144 · 539x208 px · cycle 4.7 s. Element code: https://ttmoon1030.github.io/motion-prompt/api/v1/zh-Hant/e/<id>.txt (or /ja/, /en/).
 //
 // Run one element standalone in a browser:
 //   1. paste this file into a <script>,

@@ -1,0 +1,31 @@
+// Motion Prompt #130 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#130
+//
+// 波浪文字 / Wave text
+// 包: motion2 (Motion Graphics 動態手法 第二彈) · element 10 · 分類: 文字與圖形效果
+// 會發生什麼: 「WAVE TEXT」的字母一個接一個像波浪般上下起伏。
+// 動態規格:
+//   - 「WAVE TEXT」（70 px，粗體，字距 4 px）。每 4.7 秒 3 個波（每波 1.567 秒）。
+//   - 第 i 個字母的垂直位移 = −28·sin(φ − 0.62i)，φ = 2π × 3 × 時間 ÷ 4.7（每個字母比前一個落後 0.62 rad）。
+//   - 上升中的字母垂直拉長（1 + 0.06·s），顏色從白色偏向黃色（s 為正弦值，用於顏色時限制在 0–1）。
+//   - 每個字母下方有橢圓形影子，字母越高影子越小。
+// 使用時機: 用在 Logo、短標題或配合音樂的字幕，增添趣味和節奏感。
+// 標籤: wave-text, wave, text, letters, stagger, bounce, kinetic-type
+// 尺寸: 539x208 px · 一輪: 4.7 s
+// Needs: kit motion2 -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/motion2.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#130
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 10
+// 10 ウェーブテキスト（1文字ずつ、波のように順に上下する）
+CELLS[9] = (k, w, h, u) => {
+  stage(k);
+  const f = `800 70px ${DISP}`, cs = chars(k, 'WAVE TEXT', f, 4), Y = h / 2 + 2, ph = 2 * Math.PI * 3 * u / CYC;
+  cs.forEach((c, i) => {
+    if (c.ch === ' ') return;
+    const s = Math.sin(ph - i * 0.62), y = -28 * s;
+    k.fillStyle = 'rgba(0,0,0,.3)'; k.beginPath(); k.ellipse(w / 2 + c.x, Y + 62, c.w * (0.42 - 0.12 * s), 4, 0, 0, 7); k.fill();
+    k.save(); k.translate(w / 2 + c.x, Y + y); k.scale(1, 1 + 0.06 * s); txt(k, c.ch, 0, 0, f, mix('#FFFFFF', C.yel, clamp(s)), 'center', 'middle'); k.restore();
+  });
+};

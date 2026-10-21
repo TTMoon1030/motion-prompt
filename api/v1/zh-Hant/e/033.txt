@@ -1,0 +1,36 @@
+// Motion Prompt #033 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#033
+//
+// 焦點轉移 / Rack focus
+// 包: camera (運鏡與轉場) · element 09 · 分類: 拍攝手法與時間效果
+// 會發生什麼: 攝影機不動，焦點從前景的花轉移到後方的人物，模糊的一方隨之對調。
+// 動態規格:
+//   - 攝影機：位置、方向、焦距全部固定（高度 1.1 m）；只改變模糊量
+//   - 模糊：前景的花（左 0.75 m、距離 2 m）0 px → 7 px；人物與背景（人物在右 0.9 m、距離 9 m）6 px → 0 px；地面格線的模糊量為背景的 0.6 倍
+//   - 時間：1.0 秒到 2.6 秒（1.6 秒），三次緩入緩出（相當於 cubic-bezier(0.65,0,0.35,1)）
+//   - 對焦框：藍色四角框從花沿直線移動到人物，半寬從 46 px 縮到 30 px
+//   - 被攝體：花和人物都不動
+//   - 復位：2.6–4.2 秒停住，最後 0.5 秒交叉淡化回起始狀態；右上角顯示對焦距離（◎ 2m → ◎ 9m）
+// 使用時機: 不切鏡頭，把注意力從前景移到背景（或反向）時。
+// 標籤: rack focus, focus pull, pull focus, depth of field, blur, bokeh, foreground
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#033
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 09
+// 09 ラックフォーカス
+CELLS[8] = shot(camCell((k, w, h, p) => {
+  world(k, w, h, cam({ y: 1.1 }), {
+    person: { x: 0.9, z: 9 }, blurFg: 7 * p, blurBg: 6 * (1 - p),
+    extra: [[-0.75, 0, 2.0, (kk, s) => { kk.fillStyle = C.g3; kk.fillRect(-0.025, 0, 0.05, 0.75); kk.fillStyle = C.blueM; for (let i = 0; i < 6; i++) { kk.beginPath(); kk.ellipse(Math.cos(i) * 0.09, 0.8 + Math.sin(i) * 0.09, 0.08, 0.05, i, 0, 7); kk.fill(); } kk.fillStyle = C.blue; kk.beginPath(); kk.arc(0, 0.8, 0.05, 0, 7); kk.fill(); }, true]],
+    after: (kk, cc) => {   // ピント位置の枠
+      const a = proj(cc, -0.75, 0.8, 2.0), b = proj(cc, 0.9, 0.9, 9);
+      const x = lerp(a.x, b.x, p), y = lerp(a.y, b.y, p), r = lerp(46, 30, p);
+      kk.strokeStyle = C.blue; kk.lineWidth = 2; kk.beginPath();
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => { kk.moveTo(x + sx * r, y + sy * r - sy * 9); kk.lineTo(x + sx * r, y + sy * r); kk.lineTo(x + sx * r - sx * 9, y + sy * r); });
+      kk.stroke();
+    }
+  });
+}, p => `◎ ${lerp(2, 9, p).toFixed(0)}m`, 1.0, 2.6));

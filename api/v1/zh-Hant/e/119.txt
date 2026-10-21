@@ -1,0 +1,30 @@
+// Motion Prompt #119 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#119
+//
+// 漏光 / Light leak
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 23 · 分類: 調色與風格
+// 會發生什麼: 同一幅風景的右側邊緣滲入一條漏光帶，內側為淡黃色、越靠邊緣越紅，並緩慢搖曳。
+// 動態規格:
+//   - 場景 3：左側為胸像（頭部中心 x 140, y 82，半徑 28 px），右側為山丘、房子、樹與太陽（x 432, y 54，半徑 15 px）。
+//   - 形狀：4 個直長的橢圓，中心在畫面右緣外 30 px（每個循環左右搖擺 ±6 px），垂直半徑為畫面高度的 1.1 倍
+//   - 水平半徑與顏色：250 px #FFD089 35%、170 px #FF9A3D 40%、95 px #FF5A3A 45%、45 px #FF3B30 50%（各自從 0 擴大到此半徑）
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想營造回憶、夏天、青春那種懷舊又像意外拍到的氛圍時。
+// 標籤: light leak, film leak, vintage, analog, lomo, warm glow
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#119
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 23
+// ライトリーク: 右端から、フィルムに光がもれたような赤と橙のにじみが帯になって入る
+CELLS[22] = cell((k, u) => {
+  const a = env(u), w = Math.sin(u / CYC * TAU);
+  stageLand(k, BASE);
+  k.save();
+  // 縦長の楕円を右端の外に中心を置いて重ねる（外ほど淡い黄、端ほど赤）
+  const band = (rx, col, al) => { k.globalAlpha = al * a; k.fillStyle = col; k.beginPath(); k.ellipse(CW + 30 + 6 * w, CH / 2, rx * a, CH * 1.1, 0, 0, TAU); k.fill(); };
+  band(250, '#FFD089', 0.35); band(170, '#FF9A3D', 0.4); band(95, '#FF5A3A', 0.45); band(45, '#FF3B30', 0.5);
+  k.restore();
+});

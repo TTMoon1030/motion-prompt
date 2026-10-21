@@ -1,0 +1,30 @@
+// Motion Prompt #112 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#112
+//
+// 暗角 / Vignette
+// 包: photo (攝影風格：光線、鏡頭與調色) · element 16 · 分類: 鏡頭與相機效果
+// 會發生什麼: 畫面從四角平順地變暗，只有中央的人物與道路一帶保持明亮。
+// 動態規格:
+//   - 場景 2：街角。後方是一排建築、樹與路燈（x 114, 292, 494），道路在 y 132–162，人物站在左前方（腳底 x 176, y 200，身高 124 px）。
+//   - 形狀：以畫面中心為中心的橢圓（垂直半徑 = 水平半徑 × 208/539 × 1.35）
+//   - 水平半徑 334 px 的 45% 以內不變暗，從那裡往外疊上 rgb(32,35,43)，濃度從 0% 升到 70%
+//   - 時間：效果在 0.4–1.4 秒進入，維持到 4.0 秒，4.8 秒前恢復原狀（一個循環 5 秒，三次方緩入緩出，約等於 cubic-bezier(0.65,0,0.35,1)）
+// 使用時機: 想把視線集中到主體，或營造老鏡頭氛圍時。
+// 標籤: vignette, vignetting, dark corners, edge darkening, lens falloff, focus
+// 尺寸: 539x208 px · 一輪: 5 s
+// Needs: kit photo -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/photo.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#112
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 16
+// 周辺減光（ビネット）: 四隅だけがなだらかに暗くなり、中央の人物に目が集まる
+CELLS[15] = cell((k, u) => {
+  const a = env(u);
+  stageStreet(k, BASE);
+  // 楕円の放射グラデーション: 半径の45%までは素通し、外へ向かって 0 → 70% の濃さ
+  k.save(); k.translate(CW / 2, CH / 2); k.scale(1, CH / CW * 1.35);
+  const g = k.createRadialGradient(0, 0, CW * 0.45 * 0.62, 0, 0, CW * 0.62);
+  g.addColorStop(0, 'rgba(32,35,43,0)'); g.addColorStop(1, `rgba(32,35,43,${(0.7 * a).toFixed(3)})`);
+  k.fillStyle = g; k.fillRect(-CW, -CW, CW * 2, CW * 2); k.restore();
+});

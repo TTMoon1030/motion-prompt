@@ -1,0 +1,36 @@
+// Motion Prompt #054 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#054
+//
+// Tooltip
+// 包: ui (UI 元件名稱) · element 06 · 分類: 展開與彈出式元件
+// 會發生什麼: 游標移到「?」圖示上，上方出現深色氣泡顯示簡短說明；游標移開後消失。
+// 動態規格:
+//   - 4.5 秒循環，卡片 542×191。標籤文字旁的 (196, 121) 有一個「?」圖示（藍色圓環，半徑 13）。
+//   - 游標只停留不點擊：1.05 秒抵達「?」，停到 3.15 秒，4.1 秒移出卡片。
+//   - 顯示量 a：1.15–1.35 秒以 easeOutCubic 由 0→1；不透明度 a，從下方 6 px 處升到定位。
+//   - 氣泡：#26282c、184×36、圓角 8，上緣 y 64，下方以寬 16、高 8 的三角形指向圖示；白色 15 px 文字「出現簡短說明」。
+//   - 隱藏：3.25–3.45 秒線性由 1→0。
+// 使用時機: 想為圖示或縮寫加上一行補充說明、又不佔用版面時使用。
+// 標籤: tooltip, hint, hover, help, info, title
+// 尺寸: 542x191 px · 一輪: 4.5 s
+// Needs: kit ui -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/ui.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#054
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 06
+// 06 ツールチップ（Tooltip）
+CELLS[5] = ui((w, h, t) => {
+  pageLines(24, 16, 494);
+  bar(24, 116, 150, C.line2, 11); ring(196, 121, 13, C.blue, 2.2); text('?', 196, 122, 16, C.blue, 700, 'center', NUMF);
+  fillRR(24, 146, 494, 34, 8, C.block);
+  const a = eo(seg(t, 1.15, 1.35)) * (1 - seg(t, 3.25, 3.45));
+  if (a > 0) {
+    X.save(); X.globalAlpha = a; const yy = 64 + 6 * (1 - a);
+    fillRR(196 - 92, yy, 184, 36, 8, C.dark);
+    X.beginPath(); X.moveTo(196 - 8, yy + 36); X.lineTo(196, yy + 44); X.lineTo(196 + 8, yy + 36); X.fillStyle = C.dark; X.fill();
+    text('小さな説明が出る', 196, yy + 18, 15, '#fff', 600, 'center'); X.restore();
+  }
+  // 乗せるだけ（クリックしない）
+  pointer([[.3, w + 30, h + 30], [1.05, 200, 126], [3.15, 200, 126], [4.1, w + 30, h + 30]], [], t);
+});

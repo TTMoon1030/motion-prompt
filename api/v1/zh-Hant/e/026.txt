@@ -1,0 +1,25 @@
+// Motion Prompt #026 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#026
+//
+// 直搖 / Tilt
+// 包: camera (運鏡與轉場) · element 02 · 分類: 鏡頭運動
+// 會發生什麼: 攝影機位置不變，原地往上直搖，從地面上的人物一路搖到塔頂。
+// 動態規格:
+//   - 攝影機：位置固定（高度 1.4 m）；只改俯仰角（pitch），-0.06 rad → +0.36 rad（-3° → +21°，共約 24°）
+//   - 時間：0.5 秒到 3.4 秒（2.9 秒），三次緩入緩出（相當於 cubic-bezier(0.65,0,0.35,1)）
+//   - 被攝體：人物靜止站在前方 7 m 處；人物後方、距離 26 m 處有一座 9.5 m 高的塔（頂端天線高至 11.8 m）
+//   - 畫面中所有景物都往下移：人物從下緣離開畫面，塔的上半部與頂端天線從上方進入
+//   - 復位：3.4–4.2 秒停住，最後 0.5 秒交叉淡化回起始狀態（一輪 4.7 秒）
+//   - 右上角以整數度數顯示角度（-3° → +21°）
+// 使用時機: 要呈現建築或人物的高度、尺度時。
+// 標籤: tilt, tilt up, pitch, vertical, look up, camera move
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#026
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 02
+// 02 ティルト
+CELLS[1] = shot(camCell((k, w, h, p) => world(k, w, h, cam({ pitch: lerp(-0.06, 0.36, p), y: 1.4 }), { person: { z: 7 }, tower: [0, 26], buildings: false, sun: [7, 13, 40], sunScale: 0.4 }),
+  p => `${Math.round(lerp(-0.06, 0.36, p) * 57.3)}°`.replace(/^(\d)/, '+$1')));

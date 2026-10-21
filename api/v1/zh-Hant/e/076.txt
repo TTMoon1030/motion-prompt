@@ -1,0 +1,51 @@
+// Motion Prompt #076 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#076
+//
+// Pin（捲動固定） / Pinning
+// 包: lp (Landing Page 與網站效果) · element 04 · 分類: 捲動時的效果
+// 會發生什麼: 深藍色區塊填滿畫面時停住，繼續捲動後編號與照片依步驟 1→2→3 切換，結束後區塊再往上捲走。
+// 動態規格:
+//   - 捲動量：0.3–3.0 秒 0→500 px，3.5–4.5 秒 500→0（三次方 easeInOut）。
+//   - 區塊（高 168，深藍色）在捲動量 110 px 時抵達頂端，接下來的 300 px 都停在原處（GSAP ScrollTrigger 的 pin）。
+//   - 固定期間的進度 p = (捲動量 − 110) / 300。左側的直線（長 124）隨 p 填滿橘紅色。
+//   - 在 p = 1/3 與 2/3 處（前後 ±0.07，三次方 easeInOut）切換到下一步：編號（46 px）往上捲 52 px，照片（226 × 124）往上滑 124 px。
+//   - 捲過 300 px 後解除固定，區塊與下方的白色區塊一起往上捲。
+// 使用時機: 想在一個畫面內依序呈現步驟、特色或 Before/After 時。
+// 標籤: pin, pinning, scrolltrigger, gsap, scroll-driven, steps, storytelling
+// 尺寸: 539x208 px · 一輪: 4.8 s
+// Needs: kit lp -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/lp.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#076
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 04
+// 04 ピン留め（セクションが画面に止まったまま、中身だけがスクロールで進む）
+CELLS[3] = (k, w, h, u) => {
+  frame(k);
+  const y = steps([[0.3, 0], [3.0, 500], [3.5, 500], [4.5, 0]], u);
+  const PIN0 = 110, PD = 300;
+  const top = y < PIN0 ? PIN0 - y : y < PIN0 + PD ? 0 : PIN0 + PD - y, p = clamp((y - PIN0) / PD);
+  // 中身は 1/3・2/3 の所で次のステップへ（前後 ±0.07 の範囲で easeInOut）
+  const f = eIO(P(p, 1 / 3 - 0.07, 1 / 3 + 0.07)) + eIO(P(p, 2 / 3 - 0.07, 2 / 3 + 0.07));
+  view(k, () => {
+    txt(k, '3ステップで完成', 34, 56 - y, `800 22px ${JP}`, C.ink); bars(k, 34, 72 - y, 240, 2);
+    k.save(); k.translate(0, top);
+    k.fillStyle = C.ink; k.fillRect(0, 0, VW, VH);
+    // 左: STEP の番号（スクロール量に合わせて回る）
+    txt(k, 'STEP', 34, 40, `700 12px ${EN}`, 'rgba(255,255,255,.6)', 'left', 'alphabetic', '2px');
+    k.save(); k.beginPath(); k.rect(30, 46, 120, 52); k.clip();
+    for (let i = 0; i < 3; i++) txt(k, '0' + (i + 1), 32, 90 + (i - f) * 52, `800 46px ${EN}`, '#fff');
+    k.restore();
+    bars(k, 34, 110, 150, 3, 'rgba(255,255,255,.28)');
+    // 進み具合の線
+    k.fillStyle = 'rgba(255,255,255,.16)'; rr(k, 232, 22, 4, 124, 2); k.fill();
+    k.fillStyle = C.acc; rr(k, 232, 22, 4, 124 * p, 2); k.fill();
+    // 右: 写真が順に入れ替わる
+    k.save(); rr(k, 256, 22, 226, 124, 8); k.clip();
+    for (let i = 0; i < 3; i++) pic(k, 256, 22 + (i - f) * 124, 226, 124, i, 0);
+    k.restore();
+    k.fillStyle = '#fff'; k.fillRect(0, VH, VW, 200); bars(k, 34, VH + 30, 300, 3);
+    k.restore();
+    sbar(k, y / 500, 0.3);
+  });
+};

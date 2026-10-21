@@ -1,0 +1,24 @@
+// Motion Prompt #047 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#047
+//
+// J-cut
+// 包: camera (運鏡與轉場) · element 23 · 分類: 轉場
+// 會發生什麼: 下一場的聲音在畫面切換前先進來；上方是畫面，下方是影像與聲音的時間軸。
+// 動態規格:
+//   - 銜接：畫面直接切換；只有聲音比畫面先切到下一場（B）。錯開量為整條時間軸的 20%（0.72 秒）
+//   - 播放指示器：從 0.4 秒到 4.0 秒，花 3.6 秒等速由左往右移動；聲音在 35%（約 1.66 秒）切換，畫面在 55%（約 2.38 秒）切換
+//   - 錯開區段（35–55%）中，畫面仍是 A，聲音已經是 B；此區段以淡藍色色帶與 2 條藍色虛線標示
+//   - 版面：上方 134 px 是畫面（固定攝影機，被攝體不動）；下方 74 px 是「影像」「聲音」兩列時間軸（A 為灰色，B 為淡藍色，聲音列上有波形）
+//   - 標籤：畫面左下角顯示「映像A / 映像B」（影像 A / B）；右下角顯示目前播放的聲音（「♪ Aの音」灰色 →「♪ Bの音」藍色）
+//   - 復位：最後 0.5 秒交叉淡化回起始狀態（一輪 4.7 秒）
+// 使用時機: 想先營造對下一場的期待，或讓場景、說話者的轉換更自然時。
+// 標籤: j-cut, j cut, split edit, audio lead, sound first, audio transition, edit
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#047
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 23
+// 23 Jカット: 音が先に次の場面（B）へ切り替わり、映像が後から追う
+CELLS[22] = shot(splitCell(0.2), 134);

@@ -1,0 +1,24 @@
+// Motion Prompt #044 · MIT License (c) 2026 Shohei Ohtaki · https://ttmoon1030.github.io/motion-prompt/#044
+//
+// 交叉溶解 / Cross dissolve
+// 包: camera (運鏡與轉場) · element 20 · 分類: 轉場
+// 會發生什麼: 把下一個畫面疊在目前的畫面上，不透明度逐漸提高直到完全取代；中途兩個畫面互相透出。
+// 動態規格:
+//   - 銜接：1.5 秒，從 1.5 秒到 3.0 秒；下一個畫面的不透明度 0 → 100%
+//   - 緩動：二次緩入緩出（相當於 cubic-bezier(0.45,0,0.55,1)）；在 2.25 秒時為 50%
+//   - 前一個畫面保持完全不透明墊在下方，下一個畫面疊在上方（不先把前一個畫面淡出）
+//   - 攝影機：兩個畫面都固定（A 高度 1.4 m；B 高度 1.6 m，俯仰角 +0.1 rad）；被攝體也不動
+//   - 0–1.5 秒只顯示前一個畫面，3.0–4.7 秒只顯示下一個畫面
+//   - 每 4.7 秒交替進行 A→B 與 B→A（來回一次 9.4 秒）；右上角顯示「A → B」/「B → A」
+// 使用時機: 要平緩地交代時間經過或地點轉換，或進入回憶時。
+// 標籤: cross dissolve, dissolve, crossfade, fade, opacity, blend, transition
+// 尺寸: 539x208 px · 一輪: 9.4 s
+// Needs: kit camera -> https://ttmoon1030.github.io/motion-prompt/api/v1/kit/camera.js
+// 會動的範例: https://ttmoon1030.github.io/motion-prompt/#044
+//
+// cells[i](k, w, h, u)：k = CanvasRenderingContext2D（呼叫端已清除畫面並包好 save/restore），w、h = 尺寸，u = 秒數（0 以上、未滿一輪）。畫面只由 u 決定。
+// 以下是元素的程式碼。CELLS、常數與輔助函式都在 kit 裡。
+
+// @element 20
+// 20 クロスディゾルブ
+CELLS[19] = shot(abCell((k, w, h, u, A, B) => blend(k, kk => A(kk, w, h), kk => B(kk, w, h), eIOs(P(u, 1.5, 3.0)))));
